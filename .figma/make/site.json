@@ -1,0 +1,10 @@
+{
+  "description": "This web application serves as a professional platform for Choice SoulMedia, showcasing events, galleries, and partnership opportunities while enabling easy content management.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

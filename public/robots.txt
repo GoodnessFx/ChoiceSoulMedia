@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /xk9-admin-console-7f3a
+
+Sitemap: /sitemap.xml
