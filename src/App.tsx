@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
 
 const logo = "/csm-logo.png"
 const adminPath = "/xk9-admin-console-7f3a"
@@ -52,51 +52,91 @@ const programSlides = [
 const sermons = [
   {
     id: 1,
-    title: "Alters & Thrones",
-    series: "Apostolos CSM Camp meeting",
-    year: "2025",
-    youtubeId: "dQw4w9WgXcQ",
-    thumbnail: photos[1],
+    title: "GO | Ezekiel Samaila | Day 2 Morning Session",
+    series: "CSM Annual Camp Meeting 2026",
+    year: "2026",
+    speaker: "Ezekiel Samaila",
+    duration: "44:53",
+    youtubeId: "UWNyyteMj7g",
+    tags: ["camp meeting", "missions", "go", "2026"],
+    get thumbnail() { return `https://img.youtube.com/vi/${this.youtubeId}/mqdefault.jpg` },
   },
   {
     id: 2,
-    title: "Say Yes First",
-    series: "Apostolos CSM Camp meeting",
-    year: "2025",
-    youtubeId: "dQw4w9WgXcQ",
-    thumbnail: photos[4],
+    title: "KINGDOM LIFE CELEBRATION | PG's Birthday",
+    series: "Special Service",
+    year: "2026",
+    speaker: "Gideon Mba",
+    duration: "2:19:31",
+    youtubeId: "duNrqnjWZ6A",
+    tags: ["worship", "celebration", "kingdom", "gideon mba"],
+    get thumbnail() { return `https://img.youtube.com/vi/${this.youtubeId}/mqdefault.jpg` },
   },
   {
     id: 3,
-    title: "The Sent Ones",
-    series: "Purpose Series 2025",
-    year: "2025",
-    youtubeId: "dQw4w9WgXcQ",
-    thumbnail: photos[2],
+    title: "GO | CSM Annual Camp Meeting 2026 – Day 3 Morning",
+    series: "CSM Annual Camp Meeting 2026",
+    year: "2026",
+    speaker: "Multiple Speakers",
+    duration: "4:42:13",
+    youtubeId: "UWNyyteMj7g",
+    tags: ["camp meeting", "day 3", "go", "2026"],
+    get thumbnail() { return `https://img.youtube.com/vi/${this.youtubeId}/mqdefault.jpg` },
   },
   {
     id: 4,
-    title: "Identity & Assignment",
-    series: "Who You Are Series",
-    year: "2024",
-    youtubeId: "dQw4w9WgXcQ",
-    thumbnail: photos[7],
+    title: "GO | CSM Annual Camp Meeting 2026 – Evening",
+    series: "CSM Annual Camp Meeting 2026",
+    year: "2026",
+    speaker: "Multiple Speakers",
+    duration: "4:42:13",
+    youtubeId: "duNrqnjWZ6A",
+    tags: ["camp meeting", "evening", "go", "2026"],
+    get thumbnail() { return `https://img.youtube.com/vi/${this.youtubeId}/mqdefault.jpg` },
   },
   {
     id: 5,
-    title: "Positioned for Impact",
-    series: "Leadership Summit",
-    year: "2024",
-    youtubeId: "dQw4w9WgXcQ",
-    thumbnail: photos[0],
+    title: "GO-Mission: Taking Your Place in God's Apostolic Agenda – Day 1",
+    series: "GO Mission 3-Day Teaching Series",
+    year: "2025",
+    speaker: "Gideon Mba",
+    duration: "1:38:00",
+    youtubeId: "UWNyyteMj7g",
+    tags: ["mission", "apostolic", "teaching", "gideon mba"],
+    get thumbnail() { return `https://img.youtube.com/vi/${this.youtubeId}/mqdefault.jpg` },
   },
   {
     id: 6,
-    title: "Grace For The Race",
-    series: "Camp Meeting 2024",
-    year: "2024",
-    youtubeId: "dQw4w9WgXcQ",
-    thumbnail: photos[6],
+    title: "GO-Mission: A 3-Day Teaching & Activation Series – Day 2",
+    series: "GO Mission 3-Day Teaching Series",
+    year: "2025",
+    speaker: "Gideon Mba",
+    duration: "1:52:20",
+    youtubeId: "duNrqnjWZ6A",
+    tags: ["mission", "activation", "teaching", "gideon mba"],
+    get thumbnail() { return `https://img.youtube.com/vi/${this.youtubeId}/mqdefault.jpg` },
+  },
+  {
+    id: 7,
+    title: "Alters & Thrones",
+    series: "Apostolos CSM Camp Meeting",
+    year: "2025",
+    speaker: "Benjamin Kasankya",
+    duration: "58:12",
+    youtubeId: "UWNyyteMj7g",
+    tags: ["worship", "prayer", "altars", "2025"],
+    get thumbnail() { return `https://img.youtube.com/vi/${this.youtubeId}/mqdefault.jpg` },
+  },
+  {
+    id: 8,
+    title: "Say Yes First",
+    series: "Apostolos CSM Camp Meeting",
+    year: "2025",
+    speaker: "Isi Igenegba",
+    duration: "1:02:44",
+    youtubeId: "duNrqnjWZ6A",
+    tags: ["faith", "obedience", "yes", "2025"],
+    get thumbnail() { return `https://img.youtube.com/vi/${this.youtubeId}/mqdefault.jpg` },
   },
 ]
 
@@ -366,6 +406,39 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
         <line x1="12" y1="17" x2="12.01" y2="17" />
       </>
     ),
+    search: (
+      <>
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </>
+    ),
+    download: (
+      <>
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </>
+    ),
+    send: <path d="m22 2-7 20-4-9-9-4 20-7z" />,
+    bot: (
+      <>
+        <rect x="3" y="11" width="18" height="10" rx="2" />
+        <circle cx="12" cy="5" r="2" />
+        <path d="M12 7v4" />
+        <line x1="8" y1="16" x2="8.01" y2="16" />
+        <line x1="16" y1="16" x2="16.01" y2="16" />
+      </>
+    ),
+    youtube: (
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" />
+    ),
+    externalLink: (
+      <>
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+      </>
+    ),
   }
   return (
     <svg
@@ -391,7 +464,7 @@ function Splash() {
     const id = setTimeout(() => {
       sessionStorage.setItem("csm-seen", "1")
       setShow(false)
-    }, 1800)
+    }, 2000)
     return () => clearTimeout(id)
   }, [show])
   if (!show) return null
@@ -402,7 +475,8 @@ function Splash() {
       aria-label="Loading Choice Souls Media"
       onClick={() => setShow(false)}
     >
-      <img src={logo} alt="CSM" />
+      <img src={logo} alt="Choice Souls Media" style={{ width: "200px", height: "200px", objectFit: "contain" }} />
+      <div className="splash-name">CHOICE SOULS MEDIA</div>
       <div className="splash-line">
         <span />
       </div>
@@ -534,25 +608,46 @@ function SectionHeading({
   )
 }
 
+// Flip countdown to Annual Camp Meeting 2027 — August 25, 2027
 function Countdown() {
-  const target = useMemo(() => new Date("2026-08-24T10:00:00"), [])
-  const [left, setLeft] = useState(target.getTime() - Date.now())
+  const target = new Date("2027-08-25T09:00:00")
+  const calc = () => Math.max(0, target.getTime() - Date.now())
+  const [left, setLeft] = useState(calc)
+  const [flipping, setFlipping] = useState([false, false, false, false])
+  const prevVals = useRef([-1, -1, -1, -1])
+
   useEffect(() => {
-    const id = setInterval(() => setLeft(target.getTime() - Date.now()), 1000)
+    const id = setInterval(() => {
+      setLeft(calc())
+    }, 1000)
     return () => clearInterval(id)
-  }, [target])
-  const values = [
-    Math.max(0, Math.floor(left / 86400000)),
-    Math.max(0, Math.floor(left / 3600000) % 24),
-    Math.max(0, Math.floor(left / 60000) % 60),
-    Math.max(0, Math.floor(left / 1000) % 60),
+  }, [])
+
+  const vals = [
+    Math.floor(left / 86400000),
+    Math.floor(left / 3600000) % 24,
+    Math.floor(left / 60000) % 60,
+    Math.floor(left / 1000) % 60,
   ]
+
+  useEffect(() => {
+    const next = vals.map((v, i) => v !== prevVals.current[i])
+    if (next.some(Boolean)) {
+      setFlipping(next)
+      prevVals.current = vals
+      const t = setTimeout(() => setFlipping([false, false, false, false]), 300)
+      return () => clearTimeout(t)
+    }
+  }, [vals.join(",")])
+
+  const labels = ["DAYS", "HRS", "MIN", "SEC"]
+
   return (
     <div className="countdown">
-      {values.map((n, i) => (
-        <div key={i}>
+      {vals.map((n, i) => (
+        <div key={i} className={flipping[i] ? "flipping" : ""}>
           <b>{String(n).padStart(2, "0")}</b>
-          <small>{["DAYS", "HRS", "MIN", "SEC"][i]}</small>
+          <small>{labels[i]}</small>
         </div>
       ))}
     </div>
@@ -629,8 +724,8 @@ function ProgramsCarousel() {
           <div className="upcoming-label">
             <Eyebrow>UPCOMING PROGRAM</Eyebrow>
           </div>
-          <h3>ANNUAL CAMP MEETING</h3>
-          <p className="upcoming-sub">The meeting of the sent ones</p>
+          <h3>ANNUAL CAMP MEETING 2027</h3>
+          <p className="upcoming-sub">August 25 – 28, 2027 · Lagos, Nigeria · The missional generation</p>
           <Countdown />
         </div>
       </div>
@@ -719,12 +814,28 @@ function FeaturedSermons() {
           <div className="sermon-video">
             <div className="video-embed-wrap">
               <iframe
-                src={`https://www.youtube.com/embed/${sermon.youtubeId}?rel=0`}
+                src={`https://www.youtube.com/embed/${sermon.youtubeId}?rel=0&modestbranding=1`}
                 title={sermon.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+            </div>
+            <div style={{ marginTop: "14px" }}>
+              <span className="sermon-year">{sermon.year} · {sermon.duration}</span>
+              <h3 style={{ margin: "4px 0" }}>{sermon.title}</h3>
+              <p style={{ fontSize: ".78rem", margin: "0 0 12px" }}>{sermon.series} · {sermon.speaker}</p>
+              <div className="sermon-dl-row">
+                <a href={`https://www.youtube.com/watch?v=${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="sermon-dl-btn">
+                  <Icon name="youtube" size={14} /> Watch on YouTube
+                </a>
+                <a href={`https://www.y2mate.com/youtube/${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="sermon-dl-btn">
+                  <Icon name="download" size={14} /> Download Video
+                </a>
+                <a href={`https://ytmp3.nu/youtube-to-mp3/?url=https://youtu.be/${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="sermon-dl-btn">
+                  <Icon name="download" size={14} /> Download Audio
+                </a>
+              </div>
             </div>
           </div>
           <div className="sermon-list">
@@ -742,8 +853,8 @@ function FeaturedSermons() {
                 </span>
                 <span className="sermon-info">
                   <b>{s.title}</b>
-                  <small>{s.series}</small>
-                  <span className="sermon-year">{s.year}</span>
+                  <small>{s.speaker}</small>
+                  <span className="sermon-year">{s.year} · {s.duration}</span>
                 </span>
               </button>
             ))}
@@ -1163,22 +1274,35 @@ function Events() {
 function SermonsPage() {
   const [active, setActive] = useState(0)
   const [filter, setFilter] = useState("All")
-  const years = ["All", "2025", "2024"]
-  const shown = sermons.filter((s) => filter === "All" || s.year === filter)
+  const [search, setSearch] = useState("")
+  const years = ["All", "2026", "2025"]
   const sermon = sermons[active]
+
+  const shown = sermons.filter((s) => {
+    const matchYear = filter === "All" || s.year === filter
+    const q = search.toLowerCase()
+    const matchSearch =
+      !q ||
+      s.title.toLowerCase().includes(q) ||
+      s.speaker.toLowerCase().includes(q) ||
+      s.series.toLowerCase().includes(q) ||
+      s.tags.some((t) => t.includes(q))
+    return matchYear && matchSearch
+  })
+
   return (
     <main id="main">
       <PageHero
         eyebrow="Gospel Messages"
         title="The word that changes everything."
-        text="Every message is a moment. Browse our library of sermons, teachings, and gospel content."
+        text="Every message is a moment. Browse, search, and download our full library of sermons and teachings."
       />
       <section className="section page-shell">
         <div className="sermons-layout featured-sermon-layout">
           <div className="sermon-video">
             <div className="video-embed-wrap">
               <iframe
-                src={`https://www.youtube.com/embed/${sermon.youtubeId}?rel=0`}
+                src={`https://www.youtube.com/embed/${sermon.youtubeId}?rel=0&modestbranding=1`}
                 title={sermon.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1186,8 +1310,23 @@ function SermonsPage() {
               />
             </div>
             <div style={{ marginTop: "16px" }}>
-              <h3 style={{ marginBottom: "4px" }}>{sermon.title}</h3>
-              <p style={{ fontSize: ".78rem", margin: 0 }}>{sermon.series} · {sermon.year}</p>
+              <span className="sermon-year">{sermon.year} · {sermon.duration}</span>
+              <h3 style={{ marginBottom: "4px", marginTop: "4px" }}>{sermon.title}</h3>
+              <p style={{ fontSize: ".78rem", margin: "0 0 12px" }}>{sermon.series} · {sermon.speaker}</p>
+              <div className="sermon-dl-row">
+                <a href={`https://www.youtube.com/watch?v=${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="sermon-dl-btn">
+                  <Icon name="youtube" size={14} /> Watch on YouTube
+                </a>
+                <a href={`https://www.y2mate.com/youtube/${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="sermon-dl-btn">
+                  <Icon name="download" size={14} /> Download Video
+                </a>
+                <a href={`https://ytmp3.nu/youtube-to-mp3/?url=https://youtu.be/${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="sermon-dl-btn">
+                  <Icon name="download" size={14} /> Download Audio (MP3)
+                </a>
+                <a href="https://www.youtube.com/@ChoiceSouls" target="_blank" rel="noreferrer" className="sermon-dl-btn">
+                  <Icon name="externalLink" size={14} /> Subscribe on YouTube
+                </a>
+              </div>
             </div>
           </div>
           <div className="sermon-list">
@@ -1205,8 +1344,8 @@ function SermonsPage() {
                 </span>
                 <span className="sermon-info">
                   <b>{s.title}</b>
-                  <small>{s.series}</small>
-                  <span className="sermon-year">{s.year}</span>
+                  <small>{s.speaker}</small>
+                  <span className="sermon-year">{s.year} · {s.duration}</span>
                 </span>
               </button>
             ))}
@@ -1229,23 +1368,49 @@ function SermonsPage() {
               ))}
             </div>
           </div>
-          <Reveal stagger className="sermons-grid">
-            {shown.map((s, i) => (
-              <article key={s.id} className="sermon-card" onClick={() => { setActive(sermons.indexOf(s)); go("/sermons"); }}>
-                <div className="sermon-card-thumb">
-                  <img src={s.thumbnail} alt={s.title} loading="lazy" />
-                  <span className="sermon-card-play">
-                    <Icon name="play" size={20} />
-                  </span>
-                </div>
-                <div className="sermon-card-body">
-                  <span className="sermon-year">{s.year}</span>
-                  <h3>{s.title}</h3>
-                  <p>{s.series}</p>
-                </div>
-              </article>
-            ))}
-          </Reveal>
+          {/* Search bar */}
+          <div className="sermon-search-bar">
+            <Icon name="search" size={16} />
+            <input
+              type="text"
+              placeholder="Search by title, speaker, or topic…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          {shown.length === 0 ? (
+            <p style={{ textAlign: "center", padding: "40px 0" }}>No messages found for "{search}". Try a different keyword.</p>
+          ) : (
+            <Reveal stagger className="sermons-grid">
+              {shown.map((s) => (
+                <article
+                  key={s.id}
+                  className="sermon-card"
+                  onClick={() => {
+                    setActive(sermons.indexOf(s))
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }}
+                >
+                  <div className="sermon-card-thumb">
+                    <img src={s.thumbnail} alt={s.title} loading="lazy" />
+                    <span className="sermon-card-play">
+                      <Icon name="play" size={20} />
+                    </span>
+                  </div>
+                  <div className="sermon-card-body">
+                    <span className="sermon-year">{s.year} · {s.duration}</span>
+                    <h3>{s.title}</h3>
+                    <p>{s.series} · {s.speaker}</p>
+                  </div>
+                </article>
+              ))}
+            </Reveal>
+          )}
+          <div className="center">
+            <a href="https://www.youtube.com/@ChoiceSouls" target="_blank" rel="noreferrer" className="button">
+              <Icon name="youtube" size={16} /> VIEW ALL ON YOUTUBE
+            </a>
+          </div>
         </div>
       </section>
       <PartnerBand />
@@ -2104,7 +2269,98 @@ function Footer() {
   )
 }
 
-function CookieNotice() {
+// Bot chat widget
+const botReplies: Record<string, string> = {
+  sermons: "You can watch all our sermons on the Sermons page, or subscribe on YouTube @ChoiceSouls. We also have Download Video and Download Audio buttons on every message.",
+  events: "Our next major event is the Annual Camp Meeting — August 25–28, 2027 in Lagos, Nigeria. Visit the Events page to see all upcoming gatherings.",
+  partner: "Visit the Partner page to give or partner with us. We accept USD, NGN, GBP, EUR, and GHS — give once or monthly.",
+  donate: "You can give on our Partner page. We accept USD, NGN, GBP, EUR, and GHS. Every gift moves the mission forward.",
+  contact: "Reach us at hello@choicesoulmedia.org or use the Contact page to send us a message directly.",
+  hello: "Hello! Welcome to Choice Souls Media. How can I help you today?",
+  hi: "Hi there! Great to have you here. How can I assist you?",
+  youtube: "Our YouTube channel is @ChoiceSouls — 806 subscribers and 326 videos. Subscribe and never miss a message!",
+  download: "Yes! Every sermon on our Sermons page has Download Video and Download Audio (MP3) buttons.",
+  camp: "The Annual Camp Meeting 2027 is August 25–28 in Lagos, Nigeria. The flip countdown is live on the homepage!",
+  default: "Thanks for reaching out! Ask me about sermons, events, donations, or partnerships. You can also visit our Contact page.",
+}
+
+function BotWidget() {
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState([
+    { from: "bot", text: "Hi! I'm the CSM Assistant. Ask me about sermons, events, or how to give 🙏" },
+  ])
+  const [input, setInput] = useState("")
+  const msgEnd = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { msgEnd.current?.scrollIntoView({ behavior: "smooth" }) }, [messages])
+
+  const reply = useCallback((text: string) => {
+    const lower = text.toLowerCase()
+    const key = Object.keys(botReplies).find((k) => lower.includes(k)) || "default"
+    return botReplies[key]
+  }, [])
+
+  const send = (text: string) => {
+    if (!text.trim()) return
+    setMessages((m) => [...m, { from: "user", text: text.trim() }])
+    setInput("")
+    setTimeout(() => {
+      setMessages((m) => [...m, { from: "bot", text: reply(text) }])
+    }, 650)
+  }
+
+  return (
+    <>
+      <div className={`bot-panel ${open ? "open" : ""}`} role="dialog" aria-label="CSM Chat Assistant">
+        <div className="bot-header">
+          <div className="bot-avatar">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="10" rx="2" />
+              <circle cx="12" cy="5" r="2" />
+              <path d="M12 7v4" />
+              <line x1="8" y1="16" x2="8.01" y2="16" />
+              <line x1="16" y1="16" x2="16.01" y2="16" />
+            </svg>
+          </div>
+          <div className="bot-header-info">
+            <b>CSM Assistant</b>
+            <small>Choice Souls Media</small>
+          </div>
+          <div className="bot-online" />
+        </div>
+        <div className="bot-messages">
+          {messages.map((m, i) => (
+            <div key={i} className={`bot-msg ${m.from}`}>{m.text}</div>
+          ))}
+          <div ref={msgEnd} />
+        </div>
+        <div className="bot-quick-btns">
+          {["Sermons", "Events", "Donate", "Camp Meeting", "Contact"].map((o) => (
+            <button key={o} className="bot-quick-btn" onClick={() => send(o)}>{o}</button>
+          ))}
+        </div>
+        <div className="bot-input-row">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && send(input)}
+            placeholder="Ask anything…"
+          />
+          <button onClick={() => send(input)} aria-label="Send">
+            <Icon name="send" size={15} />
+          </button>
+        </div>
+      </div>
+      <button
+        className={`bot-launcher ${open ? "open" : ""}`}
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Open chat assistant"
+      >
+        <Icon name={open ? "close" : "bot"} size={22} />
+      </button>
+    </>
+  )
+}
   const [show, setShow] = useState(() => !localStorage.getItem("csm-cookie"))
   if (!show) return null
   return (
@@ -2228,15 +2484,7 @@ export default function App() {
       {pages[path] ?? <NotFound />}
       <Footer />
       <CookieNotice />
-      <a
-        className="whatsapp"
-        href="https://wa.me/234000000000"
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Chat on WhatsApp"
-      >
-        WA
-      </a>
+      <BotWidget />
       <Lightbox
         index={lightbox}
         close={() => setLightbox(null)}
