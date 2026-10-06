@@ -524,7 +524,7 @@ function Navbar({ path }: { path: string }) {
       <nav className="navbar" aria-label="Main navigation">
         <Link href="/" className="brand">
           <span className="brand-mark">
-            <img src={logo} alt="" />
+            <img src={logo} alt="Choice Souls Media logo" />
           </span>
           <span className="brand-text">CHOICE SOULS MEDIA</span>
         </Link>
@@ -550,32 +550,35 @@ function Navbar({ path }: { path: string }) {
           <Icon name="menu" />
         </button>
       </nav>
+      {/* Mobile overlay backdrop */}
+      {open && <div className="mobile-backdrop" onClick={() => setOpen(false)} />}
       <div className={`mobile-menu ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="mobile-head">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <img src={logo} alt="CSM" />
-            <span style={{ fontWeight: 800, fontSize: "1rem", color: "var(--navy-dark)" }}>CHOICE SOULS MEDIA</span>
+          <div className="mobile-brand">
+            <img src={logo} alt="Choice Souls Media" />
+            <span>CHOICE SOULS MEDIA</span>
           </div>
           <button aria-label="Close menu" onClick={() => setOpen(false)}>
             <Icon name="close" />
           </button>
         </div>
-        <div>
-          {nav.map(([label, href], i) => (
+        <div className="mobile-nav-links">
+          {nav.map(([label, href]) => (
             <Link
               key={href}
               href={href}
               className={path === href ? "active" : ""}
+              onClick={() => setOpen(false)}
             >
-              <span onClick={() => setOpen(false)}>
-                {String(i + 1).padStart(2, "0")} — {label}
-              </span>
+              {label}
             </Link>
           ))}
         </div>
-        <Link href="/partner" className="button">
-          <span onClick={() => setOpen(false)}>PARTNER WITH US</span>
-        </Link>
+        <div className="mobile-footer-actions">
+          <Link href="/partner" className="button" onClick={() => setOpen(false)}>
+            PARTNER WITH US <Icon name="arrow" size={16} />
+          </Link>
+        </div>
       </div>
     </header>
   )
@@ -2223,7 +2226,7 @@ function Footer() {
     <footer>
       <div className="page-shell footer-grid">
         <div className="footer-brand">
-          <img src={logo} alt="CSM" />
+          <img src={logo} alt="Choice Souls Media" />
           <p>
             Creating experiences that awaken purpose, deepen connection, and
             move people forward.
@@ -2361,6 +2364,7 @@ function BotWidget() {
     </>
   )
 }
+function CookieNotice() {
   const [show, setShow] = useState(() => !localStorage.getItem("csm-cookie"))
   if (!show) return null
   return (
