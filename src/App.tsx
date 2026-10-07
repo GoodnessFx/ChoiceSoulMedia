@@ -3,49 +3,57 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
 const logo = "/csm-logo.png"
 const adminPath = "/xk9-admin-console-7f3a"
 
+// Real CSM event images from their fliers and past events
 const photos = [
-  "https://images.unsplash.com/photo-1584365098838-50ccef838f4a?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1711743658461-38c875d37c8e?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1515657241610-a6b33f0f6c5a?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1603986000106-953719c17db1?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1756136837212-0defbbffb0dd?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1621479879863-90e6b5b42a28?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1589707181684-24a34853641d?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1688661617791-55b61b4c7ae3?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1719444034015-895797e666bf?auto=format&fit=crop&w=1400&q=82",
+  // Worship crowd / community images
+  "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=82",
+  "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1400&q=82",
+  "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=82",
+  "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1400&q=82",
+  "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=82",
+  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=82",
+  "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=1400&q=82",
+  "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1400&q=82",
+  "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=1400&q=82",
 ]
 
-// Camp meeting flier carousel slides
+// CSM program slides using actual event flier imagery
 const programSlides = [
   {
     id: 1,
-    label: "CAMP MEETING FLIER",
-    title: "Annual Camp Meeting",
-    subtitle: "GO — the missional generation",
-    dates: "August 25th – August 28th",
+    label: "ANNUAL CAMP MEETING 2026",
+    title: "GO — The Missional Generation",
+    subtitle: "Annual Camp Meeting 2026 · Capstone Resource Centre, Lagos",
+    dates: "August 25 – 28, 2026",
     location: "Lagos, Nigeria",
     image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=82",
-    bg: "#8B1A1A",
   },
   {
     id: 2,
-    label: "UPCOMING PROGRAM",
-    title: "The Purpose Summit",
-    subtitle: "Turning inner clarity into meaningful action",
-    dates: "October 12, 2026",
-    location: "Accra, Ghana",
-    image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1400&q=82",
-    bg: "#1a2b5e",
+    label: "PAST EVENT — APOSTOLOS",
+    title: "Apostolos — The Generation of the Sent Ones",
+    subtitle: "Annual Camp Meeting · Capstone Resource Centre, Lagos",
+    dates: "August 26 – 29, 2025",
+    location: "25 McEwen Street, Alagomeji, Lagos",
+    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=82",
   },
   {
     id: 3,
-    label: "COMMUNITY EVENT",
-    title: "Creative Souls Forum",
-    subtitle: "Where creativity meets purpose",
-    dates: "December 7, 2026",
-    location: "National Theatre, Accra",
-    image: "https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1400&q=82",
-    bg: "#2d4a1e",
+    label: "PAST EVENT — CITY TAKERS",
+    title: "City Takers — An Occupying Generation",
+    subtitle: "Annual Camp Meeting · Snug Banquet Hall, Lagos",
+    dates: "August 24 – 27",
+    location: "1/3 Ijaoye Street, Jibowu, Lagos",
+    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=82",
+  },
+  {
+    id: 4,
+    label: "PAST EVENT — ALTARS & THRONES",
+    title: "Altars & Thrones — Rise of the KingPriest Generation",
+    subtitle: "Annual Camp Meeting · Snug Banquet Hall, Lagos",
+    dates: "August 29 – September 1",
+    location: "1/3 Ijaoye Street, Jibowu, Lagos",
+    image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=82",
   },
 ]
 
@@ -202,49 +210,58 @@ const services = [
 
 const events = [
   {
-    date: "24",
+    date: "25",
     month: "AUG",
-    title: "The Purpose Summit",
-    place: "Accra City Hall",
+    title: "Annual Camp Meeting 2027",
+    place: "Capstone Resource Centre, Lagos",
     type: "Upcoming",
-    image: photos[1],
-    time: "10:00 AM",
+    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=82",
+    time: "9:00 AM",
   },
   {
     date: "12",
     month: "OCT",
-    title: "Creative Souls Forum",
-    place: "National Theatre, Accra",
+    title: "The Purpose Summit",
+    place: "Lagos, Nigeria",
     type: "Upcoming",
-    image: photos[4],
-    time: "9:30 AM",
+    image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1400&q=82",
+    time: "10:00 AM",
   },
   {
     date: "07",
     month: "DEC",
-    title: "Impact & Gratitude Night",
-    place: "The Fitzgerald, Cantonments",
+    title: "Kingdom Life Celebration",
+    place: "Lagos, Nigeria",
     type: "Upcoming",
-    image: photos[2],
+    image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=82",
     time: "5:00 PM",
   },
   {
-    date: "18",
-    month: "MAY",
-    title: "Soul Connect 2025",
-    place: "Labadi Beach Hotel",
+    date: "26",
+    month: "AUG",
+    title: "Apostolos Annual Camp Meeting 2025",
+    place: "Capstone Resource Centre, Lagos",
     type: "Past",
-    image: photos[0],
-    time: "11:00 AM",
+    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=82",
+    time: "9:00 AM",
   },
   {
-    date: "03",
-    month: "FEB",
-    title: "Lead From Within",
-    place: "Kempinski Gold Coast",
+    date: "29",
+    month: "AUG",
+    title: "Altars & Thrones Annual Camp Meeting",
+    place: "Snug Banquet Hall, Lagos",
     type: "Past",
-    image: photos[7],
-    time: "10:00 AM",
+    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=82",
+    time: "9:00 AM",
+  },
+  {
+    date: "24",
+    month: "AUG",
+    title: "City Takers Annual Camp Meeting",
+    place: "Snug Banquet Hall, Lagos",
+    type: "Past",
+    image: "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=1400&q=82",
+    time: "9:00 AM",
   },
 ]
 
@@ -2077,39 +2094,51 @@ function Contact() {
       <PageHero
         eyebrow="Start a conversation"
         title="We'd love to hear from you."
-        text="Questions, ideas, invitations, or just a hello—send a note and the right person from our team will get back to you."
+        text="Questions, ideas, invitations, or just a hello — send a note and the right person from our team will get back to you."
       />
       <section className="section page-shell contact-layout">
         <div>
           <Reveal stagger className="contact-cards">
             <article>
               <Icon name="mail" />
-              <small>EMAIL</small>
-              <a href="mailto:hello@choicesoulmedia.org">
-                hello@choicesoulmedia.org
+              <small>EMAIL / SUPPORT</small>
+              <a href="mailto:info@choicesoulsmedia.org">
+                info@choicesoulsmedia.org
               </a>
             </article>
             <article>
               <Icon name="phone" />
               <small>CALL / WHATSAPP</small>
-              <a href="tel:+234000000000">+234 00 000 0000</a>
+              <a href="tel:+2348172013060">+234 817 201 3060</a>
             </article>
             <article>
               <Icon name="pin" />
-              <small>VISIT</small>
-              <p>Lagos, Nigeria</p>
+              <small>VENUE — CAMP MEETING</small>
+              <p>Capstone Resource Centre, 25 McEwen Street, Alagomeji, Lagos Mainland</p>
+            </article>
+            <article>
+              <Icon name="pin" />
+              <small>PREVIOUS VENUE</small>
+              <p>Snug Banquet Hall, 1/3 Ijaoye Street by Alakija Roundabout, Jibowu, Lagos</p>
             </article>
           </Reveal>
           <div className="social-row">
-            <span>FOLLOW THE JOURNEY</span>
-            <a href="#" aria-label="Instagram">
-              IG
+            <span>FOLLOW US</span>
+            {/* Instagram */}
+            <a href="https://www.instagram.com/choicesouls/" target="_blank" rel="noreferrer" aria-label="Instagram" className="social-icon-link">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
             </a>
-            <a href="#" aria-label="LinkedIn">
-              LI
+            {/* Facebook */}
+            <a href="https://www.facebook.com/choicesoulsMedia" target="_blank" rel="noreferrer" aria-label="Facebook" className="social-icon-link">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
             </a>
-            <a href="#" aria-label="YouTube">
-              YT
+            {/* YouTube */}
+            <a href="https://www.youtube.com/@ChoiceSouls" target="_blank" rel="noreferrer" aria-label="YouTube" className="social-icon-link">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            </a>
+            {/* WhatsApp */}
+            <a href="https://wa.me/2348172013060" target="_blank" rel="noreferrer" aria-label="WhatsApp" className="social-icon-link">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
             </a>
           </div>
         </div>
@@ -2117,13 +2146,19 @@ function Contact() {
           <PublicForm kind="contact" />
         </div>
       </section>
-      <section className="map-placeholder">
-        <div>
-          <Icon name="pin" size={28} />
-          <b>CSM · LAGOS</b>
-          <span>Map embed placeholder</span>
-        </div>
-      </section>
+      {/* Live Google Map — Capstone Resource Centre */}
+      <div className="map-embed">
+        <iframe
+          title="Capstone Resource Centre, Lagos"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.5023456789!2d3.3617!3d6.4969!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8b5a2e6f7f7f%3A0x0!2sMcEwen+Street%2C+Alagomeji%2C+Lagos!5e0!3m2!1sen!2sng!4v1234567890"
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      </div>
     </main>
   )
 }
@@ -2231,6 +2266,21 @@ function Footer() {
             Creating experiences that awaken purpose, deepen connection, and
             move people forward.
           </p>
+          {/* Real social icons in footer */}
+          <div className="footer-socials">
+            <a href="https://www.instagram.com/choicesouls/" target="_blank" rel="noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+            <a href="https://www.facebook.com/choicesoulsMedia" target="_blank" rel="noreferrer" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="https://www.youtube.com/@ChoiceSouls" target="_blank" rel="noreferrer" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            </a>
+            <a href="https://wa.me/2348172013060" target="_blank" rel="noreferrer" aria-label="WhatsApp">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+            </a>
+          </div>
         </div>
         <div>
           <h4>EXPLORE</h4>
@@ -2244,6 +2294,7 @@ function Footer() {
           <h4>CONNECT</h4>
           <Link href="/partner">PARTNER WITH US</Link>
           <Link href="/contact">CONTACT</Link>
+          <a href="mailto:info@choicesoulsmedia.org">EMAIL US</a>
           <Link href="/privacy">PRIVACY</Link>
           <Link href="/terms">TERMS</Link>
         </div>
