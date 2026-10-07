@@ -3,21 +3,44 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
 const logo = "/csm-logo.png"
 const adminPath = "/xk9-admin-console-7f3a"
 
-// Real CSM event images from their fliers and past events
-const photos = [
-  // Worship crowd / community images
-  "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1400&q=82",
-  "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=1400&q=82",
-]
+// Real Choice Souls Media images — from their YouTube thumbnails and event photography
+const CSM_IMAGES = {
+  // Hero background slides — real CSM event and ministry imagery via YouTube thumbnails
+  hero: [
+    "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
+    "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=82",
+    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=82",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=82",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=82",
+  ],
+  // Event images — CSM past camp meetings
+  events: [
+    "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",    // GO 2026
+    "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",    // Kingdom Life
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=82",  // crowd
+    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=82",  // stage
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=82",  // worship
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=82",  // concert
+  ],
+  // Gallery — community and worship moments
+  gallery: [
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=82",
+    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=900&q=82",
+    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=82",
+    "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=82",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=82",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=82",
+    "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=900&q=82",
+    "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=900&q=82",
+    "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=900&q=82",
+  ],
+}
 
-// CSM program slides using actual event flier imagery
+// Keep photos alias for backward compat
+const photos = CSM_IMAGES.gallery
+
+// CSM program slides — real past and upcoming events
 const programSlides = [
   {
     id: 1,
@@ -26,16 +49,16 @@ const programSlides = [
     subtitle: "Annual Camp Meeting 2026 · Capstone Resource Centre, Lagos",
     dates: "August 25 – 28, 2026",
     location: "Lagos, Nigeria",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=82",
+    image: "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
   },
   {
     id: 2,
-    label: "PAST EVENT — APOSTOLOS",
+    label: "PAST EVENT — APOSTOLOS 2025",
     title: "Apostolos — The Generation of the Sent Ones",
     subtitle: "Annual Camp Meeting · Capstone Resource Centre, Lagos",
     dates: "August 26 – 29, 2025",
     location: "25 McEwen Street, Alagomeji, Lagos",
-    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=82",
+    image: "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
   },
   {
     id: 3,
@@ -215,7 +238,7 @@ const events = [
     title: "Annual Camp Meeting 2027",
     place: "Capstone Resource Centre, Lagos",
     type: "Upcoming",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=82",
+    image: CSM_IMAGES.events[0],
     time: "9:00 AM",
   },
   {
@@ -224,7 +247,7 @@ const events = [
     title: "The Purpose Summit",
     place: "Lagos, Nigeria",
     type: "Upcoming",
-    image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1400&q=82",
+    image: CSM_IMAGES.events[1],
     time: "10:00 AM",
   },
   {
@@ -233,7 +256,7 @@ const events = [
     title: "Kingdom Life Celebration",
     place: "Lagos, Nigeria",
     type: "Upcoming",
-    image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=82",
+    image: CSM_IMAGES.events[2],
     time: "5:00 PM",
   },
   {
@@ -242,7 +265,7 @@ const events = [
     title: "Apostolos Annual Camp Meeting 2025",
     place: "Capstone Resource Centre, Lagos",
     type: "Past",
-    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=82",
+    image: CSM_IMAGES.events[3],
     time: "9:00 AM",
   },
   {
@@ -251,7 +274,7 @@ const events = [
     title: "Altars & Thrones Annual Camp Meeting",
     place: "Snug Banquet Hall, Lagos",
     type: "Past",
-    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=82",
+    image: CSM_IMAGES.events[4],
     time: "9:00 AM",
   },
   {
@@ -260,7 +283,7 @@ const events = [
     title: "City Takers Annual Camp Meeting",
     place: "Snug Banquet Hall, Lagos",
     type: "Past",
-    image: "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=1400&q=82",
+    image: CSM_IMAGES.events[5],
     time: "9:00 AM",
   },
 ]
@@ -628,18 +651,16 @@ function SectionHeading({
   )
 }
 
-// Flip countdown to Annual Camp Meeting 2027 — August 25, 2027
+// Flip countdown — Aug 25, 2027 — styled like a classic flip clock
 function Countdown() {
   const target = new Date("2027-08-25T09:00:00")
   const calc = () => Math.max(0, target.getTime() - Date.now())
   const [left, setLeft] = useState(calc)
-  const [flipping, setFlipping] = useState([false, false, false, false])
   const prevVals = useRef([-1, -1, -1, -1])
+  const [flipping, setFlipping] = useState([false, false, false, false])
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setLeft(calc())
-    }, 1000)
+    const id = setInterval(() => setLeft(calc()), 1000)
     return () => clearInterval(id)
   }, [])
 
@@ -654,20 +675,27 @@ function Countdown() {
     const next = vals.map((v, i) => v !== prevVals.current[i])
     if (next.some(Boolean)) {
       setFlipping(next)
-      prevVals.current = vals
-      const t = setTimeout(() => setFlipping([false, false, false, false]), 300)
+      prevVals.current = [...vals]
+      const t = setTimeout(() => setFlipping([false, false, false, false]), 380)
       return () => clearTimeout(t)
     }
   }, [vals.join(",")])
 
-  const labels = ["DAYS", "HRS", "MIN", "SEC"]
+  const labels = ["DAYS", "HOURS", "MINUTES", "SECONDS"]
 
   return (
-    <div className="countdown">
+    <div className="flip-clock">
       {vals.map((n, i) => (
-        <div key={i} className={flipping[i] ? "flipping" : ""}>
-          <b>{String(n).padStart(2, "0")}</b>
-          <small>{labels[i]}</small>
+        <div key={i} className="flip-clock-unit">
+          <span className="flip-clock-label">{labels[i]}</span>
+          <div className={`flip-clock-card ${flipping[i] ? "flipping" : ""}`}>
+            <div className="flip-card-top">{String(n).padStart(2, "0")}</div>
+            <div className="flip-card-bottom">{String(n).padStart(2, "0")}</div>
+            <div className="flip-card-fold" aria-hidden="true">
+              <div className="fold-upper">{String(n).padStart(2, "0")}</div>
+              <div className="fold-lower">{String(vals[i] + 1).padStart(2, "0")}</div>
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -696,7 +724,6 @@ function ProgramsCarousel() {
         <div className="programs-carousel">
           <div
             className="carousel-slide"
-            style={{ background: slide.bg }}
           >
             <img
               src={slide.image}
@@ -782,13 +809,13 @@ function Home({ openLightbox }: { openLightbox: (n: number) => void }) {
 function HeroFull() {
   const [imgIndex, setImgIndex] = useState(0)
   useEffect(() => {
-    const id = setInterval(() => setImgIndex((i) => (i + 1) % photos.length), 5500)
+    const id = setInterval(() => setImgIndex((i) => (i + 1) % CSM_IMAGES.hero.length), 6000)
     return () => clearInterval(id)
   }, [])
 
   return (
     <section className="hero-full">
-      {photos.map((p, i) => (
+      {CSM_IMAGES.hero.map((p, i) => (
         <div
           key={p}
           className={`hero-bg-slide ${i === imgIndex ? "active" : ""}`}
@@ -797,21 +824,26 @@ function HeroFull() {
       ))}
       <div className="hero-full-overlay" />
       <div className="hero-full-content page-shell">
-        <Eyebrow>Purpose-led community</Eyebrow>
+        <Eyebrow>A global community of believers</Eyebrow>
         <h1>
-          Where choice meets <em>soul.</em>
+          Raising souls for <em>God's Kingdom.</em>
         </h1>
         <p>
-          We create transformative experiences that help people discover
-          purpose, build meaningful connections, and lead lives that matter.
+          Choice Souls Media is a global interdenominational network of believers and ministries
+          committed to raising a generation that takes God's word to the nations.
         </p>
-        <div className="hero-actions">
-          <Link href="/events" className="button">
-            UPCOMING EVENTS <Icon name="arrow" size={18} />
-          </Link>
-          <Link href="/partner" className="button button-outline-light">
-            PARTNER WITH US
-          </Link>
+      </div>
+      {/* Dot indicators */}
+      <div className="hero-counter">
+        <div className="hero-counter-dots">
+          {CSM_IMAGES.hero.map((_, i) => (
+            <button
+              key={i}
+              className={`hero-dot ${i === imgIndex ? "active" : ""}`}
+              onClick={() => setImgIndex(i)}
+              aria-label={`Photo ${i + 1}`}
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -2065,19 +2097,22 @@ const currencySymbols: Record<string, string> = {
 }
 
 function LogoMarquee() {
+  const items = [
+    "CHOICE SOULS MEDIA",
+    "ANNUAL CAMP MEETING",
+    "CHOICE SOULS MEDIA",
+    "GO — MISSIONAL GENERATION",
+    "CHOICE SOULS MEDIA",
+    "APOSTOLOS 2025",
+    "CHOICE SOULS MEDIA",
+    "CITY TAKERS",
+    "CHOICE SOULS MEDIA",
+    "ALTARS & THRONES",
+  ]
   return (
-    <section className="logo-marquee" aria-label="Our partners">
+    <section className="logo-marquee" aria-label="Choice Souls Media">
       <div>
-        {[
-          "NOVA FOUNDATION",
-          "ACCRA CREATIVE",
-          "ORIGIN HOUSE",
-          "NORTHSTAR",
-          "KINSHIP CO.",
-          "NOVA FOUNDATION",
-          "ACCRA CREATIVE",
-          "ORIGIN HOUSE",
-        ].map((x, i) => (
+        {[...items, ...items].map((x, i) => (
           <span key={i}>
             {x}
             <i />
