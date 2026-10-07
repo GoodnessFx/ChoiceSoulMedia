@@ -1,6 +1,5 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
-
-const logo = "/csmlogo.jpeg"
+import logo from "./assets/csmlogo.jpeg"
 const adminPath = "/xk9-admin-console-7f3a"
 
 // Hero: mix of CSM YT thumbnails + diverse high-quality worship/Africa images
@@ -514,7 +513,7 @@ function Splash() {
       aria-label="Loading Choice Souls Media"
       onClick={() => setShow(false)}
     >
-      <img src={logo} alt="Choice Souls Media" style={{ width: "200px", height: "200px", objectFit: "contain" }} />
+      <img src={logo} alt="Choice Souls Media" style={{ width: "200px", height: "200px", objectFit: "contain" }} onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
       <div className="splash-name">CHOICE SOULS MEDIA</div>
       <div className="splash-line">
         <span />
@@ -563,7 +562,7 @@ function Navbar({ path }: { path: string }) {
       <nav className="navbar" aria-label="Main navigation">
         <Link href="/" className="brand">
           <span className="brand-mark">
-            <img src={logo} alt="Choice Souls Media logo" />
+            <img src={logo} alt="Choice Souls Media logo" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
           </span>
           <span className="brand-text">CHOICE SOULS MEDIA</span>
         </Link>
@@ -594,7 +593,7 @@ function Navbar({ path }: { path: string }) {
       <div className={`mobile-menu ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="mobile-head">
           <div className="mobile-brand">
-            <img src={logo} alt="Choice Souls Media" />
+            <img src={logo} alt="Choice Souls Media" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
             <span>CHOICE SOULS MEDIA</span>
           </div>
           <button aria-label="Close menu" onClick={() => setOpen(false)}>
@@ -2261,7 +2260,7 @@ function AdminShell() {
   return (
     <main className="admin-shell">
       <div className="admin-card">
-        <img src={logo} alt="CSM" />
+        <img src={logo} alt="CSM" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
         <Eyebrow>Secure console</Eyebrow>
         <h1>Backend connection required</h1>
         <p>
@@ -2290,7 +2289,7 @@ function AdminShell() {
 function NotFound() {
   return (
     <main id="main" className="not-found">
-      <img src={logo} alt="CSM" />
+      <img src={logo} alt="CSM" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
       <span>404</span>
       <h1>This page took a different path.</h1>
       <p>Let's get you back to the heart of the story.</p>
@@ -2312,7 +2311,7 @@ function Footer() {
     <footer>
       <div className="page-shell footer-grid">
         <div className="footer-brand">
-          <img src={logo} alt="Choice Souls Media" />
+          <img src={logo} alt="Choice Souls Media" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
           <p>
             Creating experiences that awaken purpose, deepen connection, and
             move people forward.
