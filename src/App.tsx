@@ -1,43 +1,42 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
 
-const logo = "/csm-logo.png"
+const logo = "/csmlogo.jpeg"
 const adminPath = "/xk9-admin-console-7f3a"
 
-// Real Choice Souls Media images — from their YouTube thumbnails and event photography
+// Hero: mix of CSM YT thumbnails + diverse high-quality worship/Africa images
 const CSM_IMAGES = {
-  // Hero background slides — real CSM event and ministry imagery via YouTube thumbnails
   hero: [
     "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=85",
     "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=82",
-    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=82",
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=82",
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=82",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=85",
+    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=85",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=85",
+    "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=1400&q=85",
+    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1400&q=85",
   ],
-  // Event images — CSM past camp meetings
   events: [
-    "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",    // GO 2026
-    "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",    // Kingdom Life
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=82",  // crowd
-    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=82",  // stage
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=82",  // worship
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=82",  // concert
+    "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
+    "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
+    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=85",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=85",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=85",
   ],
-  // Gallery — community and worship moments
+  // Gallery — mix CSM YT thumbnails with community worship imagery
   gallery: [
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=82",
-    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=900&q=82",
-    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=82",
-    "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=82",
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=82",
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=82",
-    "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=900&q=82",
-    "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=900&q=82",
-    "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=900&q=82",
+    "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
+    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
+    "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=85",
+    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=85",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=85",
+    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=900&q=85",
+    "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=900&q=85",
+    "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=85",
   ],
 }
 
-// Keep photos alias for backward compat
 const photos = CSM_IMAGES.gallery
 
 // CSM program slides — real past and upcoming events
@@ -651,7 +650,7 @@ function SectionHeading({
   )
 }
 
-// Flip countdown — Aug 25, 2027 — styled like a classic flip clock
+// Clean flip countdown — Aug 25, 2027
 function Countdown() {
   const target = new Date("2027-08-25T09:00:00")
   const calc = () => Math.max(0, target.getTime() - Date.now())
@@ -672,11 +671,11 @@ function Countdown() {
   ]
 
   useEffect(() => {
-    const next = vals.map((v, i) => v !== prevVals.current[i])
-    if (next.some(Boolean)) {
-      setFlipping(next)
+    const changed = vals.map((v, i) => v !== prevVals.current[i])
+    if (changed.some(Boolean)) {
+      setFlipping(changed)
       prevVals.current = [...vals]
-      const t = setTimeout(() => setFlipping([false, false, false, false]), 380)
+      const t = setTimeout(() => setFlipping([false, false, false, false]), 400)
       return () => clearTimeout(t)
     }
   }, [vals.join(",")])
@@ -688,13 +687,8 @@ function Countdown() {
       {vals.map((n, i) => (
         <div key={i} className="flip-clock-unit">
           <span className="flip-clock-label">{labels[i]}</span>
-          <div className={`flip-clock-card ${flipping[i] ? "flipping" : ""}`}>
-            <div className="flip-card-top">{String(n).padStart(2, "0")}</div>
-            <div className="flip-card-bottom">{String(n).padStart(2, "0")}</div>
-            <div className="flip-card-fold" aria-hidden="true">
-              <div className="fold-upper">{String(n).padStart(2, "0")}</div>
-              <div className="fold-lower">{String(vals[i] + 1).padStart(2, "0")}</div>
-            </div>
+          <div className={`flip-clock-card${flipping[i] ? " flipping" : ""}`}>
+            <span className="flip-num">{String(n).padStart(2, "0")}</span>
           </div>
         </div>
       ))}
@@ -1327,6 +1321,7 @@ function SermonsPage() {
   const [active, setActive] = useState(0)
   const [filter, setFilter] = useState("All")
   const [search, setSearch] = useState("")
+  const [dlMode, setDlMode] = useState<"watch"|"video"|"audio">("watch")
   const years = ["All", "2026", "2025"]
   const sermon = sermons[active]
 
@@ -1342,13 +1337,26 @@ function SermonsPage() {
     return matchYear && matchSearch
   })
 
+  const getDlLink = (s: typeof sermon) => {
+    if (dlMode === "video") return `https://www.y2mate.com/youtube/${s.youtubeId}`
+    if (dlMode === "audio") return `https://ytmp3.nu/youtube-to-mp3/?url=https://youtu.be/${s.youtubeId}`
+    return `https://www.youtube.com/watch?v=${s.youtubeId}`
+  }
+  const getDlLabel = () => {
+    if (dlMode === "video") return "Download MP4"
+    if (dlMode === "audio") return "Download MP3"
+    return "Watch"
+  }
+
   return (
     <main id="main">
       <PageHero
         eyebrow="Gospel Messages"
         title="The word that changes everything."
-        text="Every message is a moment. Browse, search, and download our full library of sermons and teachings."
+        text="Browse, search, watch, and download our full library of sermons and teachings."
       />
+
+      {/* Featured player */}
       <section className="section page-shell">
         <div className="sermons-layout featured-sermon-layout">
           <div className="sermon-video">
@@ -1361,7 +1369,7 @@ function SermonsPage() {
                 allowFullScreen
               />
             </div>
-            <div style={{ marginTop: "16px" }}>
+            <div style={{ marginTop: "14px" }}>
               <span className="sermon-year">{sermon.year} · {sermon.duration}</span>
               <h3 style={{ marginBottom: "4px", marginTop: "4px" }}>{sermon.title}</h3>
               <p style={{ fontSize: ".78rem", margin: "0 0 12px" }}>{sermon.series} · {sermon.speaker}</p>
@@ -1370,29 +1378,23 @@ function SermonsPage() {
                   <Icon name="youtube" size={14} /> Watch on YouTube
                 </a>
                 <a href={`https://www.y2mate.com/youtube/${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="sermon-dl-btn">
-                  <Icon name="download" size={14} /> Download Video
+                  <Icon name="download" size={14} /> Download Video (MP4)
                 </a>
                 <a href={`https://ytmp3.nu/youtube-to-mp3/?url=https://youtu.be/${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="sermon-dl-btn">
                   <Icon name="download" size={14} /> Download Audio (MP3)
                 </a>
                 <a href="https://www.youtube.com/@ChoiceSouls" target="_blank" rel="noreferrer" className="sermon-dl-btn">
-                  <Icon name="externalLink" size={14} /> Subscribe on YouTube
+                  <Icon name="externalLink" size={14} /> Subscribe
                 </a>
               </div>
             </div>
           </div>
           <div className="sermon-list">
             {sermons.map((s, i) => (
-              <button
-                key={s.id}
-                className={`sermon-item ${i === active ? "active" : ""}`}
-                onClick={() => setActive(i)}
-              >
+              <button key={s.id} className={`sermon-item ${i === active ? "active" : ""}`} onClick={() => setActive(i)}>
                 <span className="sermon-thumb">
                   <img src={s.thumbnail} alt={s.title} />
-                  <span className="sermon-play">
-                    <Icon name="play" size={14} />
-                  </span>
+                  <span className="sermon-play"><Icon name="play" size={13} /></span>
                 </span>
                 <span className="sermon-info">
                   <b>{s.title}</b>
@@ -1404,23 +1406,32 @@ function SermonsPage() {
           </div>
         </div>
       </section>
+
+      {/* Download library */}
       <section className="section soft">
         <div className="page-shell">
-          <div className="filter-row">
-            <SectionHeading eyebrow="All messages" title="Browse the library." />
-            <div className="filters">
-              {years.map((y) => (
-                <button
-                  key={y}
-                  className={filter === y ? "active" : ""}
-                  onClick={() => setFilter(y)}
-                >
-                  {y}
+          {/* Mode selector */}
+          <div className="dl-mode-bar">
+            <span className="dl-mode-label">Choose what you want to do:</span>
+            <div className="dl-mode-tabs">
+              {([["watch","Watch Online"],["video","Download Video (MP4)"],["audio","Download Audio (MP3)"]] as const).map(([m, lbl]) => (
+                <button key={m} className={dlMode === m ? "active" : ""} onClick={() => setDlMode(m)}>
+                  <Icon name={m === "watch" ? "play" : "download"} size={13} />
+                  {lbl}
                 </button>
               ))}
             </div>
           </div>
-          {/* Search bar */}
+
+          {/* Filters + search */}
+          <div className="filter-row" style={{ marginTop: "20px" }}>
+            <SectionHeading eyebrow="All messages" title="Browse the library." />
+            <div className="filters">
+              {years.map((y) => (
+                <button key={y} className={filter === y ? "active" : ""} onClick={() => setFilter(y)}>{y}</button>
+              ))}
+            </div>
+          </div>
           <div className="sermon-search-bar">
             <Icon name="search" size={16} />
             <input
@@ -1430,33 +1441,38 @@ function SermonsPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+
           {shown.length === 0 ? (
-            <p style={{ textAlign: "center", padding: "40px 0" }}>No messages found for "{search}". Try a different keyword.</p>
+            <p className="sermon-no-results">No messages found for "{search}". Try a different keyword.</p>
           ) : (
-            <Reveal stagger className="sermons-grid">
-              {shown.map((s) => (
-                <article
-                  key={s.id}
-                  className="sermon-card"
-                  onClick={() => {
-                    setActive(sermons.indexOf(s))
-                    window.scrollTo({ top: 0, behavior: "smooth" })
-                  }}
-                >
-                  <div className="sermon-card-thumb">
-                    <img src={s.thumbnail} alt={s.title} loading="lazy" />
-                    <span className="sermon-card-play">
-                      <Icon name="play" size={20} />
-                    </span>
+            <div className="dl-sermon-list">
+              {shown.map((s, idx) => (
+                <div key={s.id} className="dl-sermon-row">
+                  <span className="dl-num">{String(idx + 1).padStart(2, "0")}</span>
+                  <img
+                    src={s.thumbnail}
+                    alt={s.title}
+                    className="dl-thumb"
+                    onClick={() => { setActive(sermons.indexOf(s)); window.scrollTo({ top: 0, behavior: "smooth" }) }}
+                  />
+                  <div className="dl-info">
+                    <b>{s.title}</b>
+                    <span>{s.series} · {s.speaker} · {s.year}</span>
+                    <span className="sermon-year">{s.duration}</span>
                   </div>
-                  <div className="sermon-card-body">
-                    <span className="sermon-year">{s.year} · {s.duration}</span>
-                    <h3>{s.title}</h3>
-                    <p>{s.series} · {s.speaker}</p>
-                  </div>
-                </article>
+                  <a
+                    href={getDlLink(s)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`dl-action-btn ${dlMode}`}
+                    download={dlMode !== "watch"}
+                  >
+                    <Icon name={dlMode === "watch" ? "play" : "download"} size={15} />
+                    {getDlLabel()}
+                  </a>
+                </div>
               ))}
-            </Reveal>
+            </div>
           )}
           <div className="center">
             <a href="https://www.youtube.com/@ChoiceSouls" target="_blank" rel="noreferrer" className="button">
