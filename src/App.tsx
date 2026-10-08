@@ -298,7 +298,6 @@ const nav = [
   ["SERVICES", "/services"],
   ["EVENTS", "/events"],
   ["SERMONS", "/sermons"],
-  ["ARCHIVE", "/archive"],
   ["TESTIMONIES", "/testimonies"],
   ["FAQs", "/faqs"],
   ["CONTACT", "/contact"],
@@ -1321,6 +1320,8 @@ function SermonsPage() {
   const [filter, setFilter] = useState("All")
   const [search, setSearch] = useState("")
   const [dlMode, setDlMode] = useState<"watch"|"video"|"audio">("watch")
+  const [tab, setTab] = useState<"sermons"|"archive">("sermons")
+  const [archiveFilter, setArchiveFilter] = useState("All")
   const years = ["All", "2026", "2025"]
   const sermon = sermons[active]
 
@@ -1355,6 +1356,17 @@ function SermonsPage() {
         text="Browse, search, watch, and download our full library of sermons and teachings."
       />
 
+      {/* Tab switcher */}
+      <div className="sermon-tabs page-shell">
+        <button className={tab === "sermons" ? "active" : ""} onClick={() => setTab("sermons")}>
+          <Icon name="play" size={15} /> Sermons
+        </button>
+        <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>
+          <Icon name="book" size={15} /> Archive
+        </button>
+      </div>
+
+      {tab === "sermons" ? (<>
       {/* Featured player */}
       <section className="section page-shell">
         <div className="sermons-layout featured-sermon-layout">
@@ -1480,58 +1492,38 @@ function SermonsPage() {
           </div>
         </div>
       </section>
-      <PartnerBand />
-    </main>
-  )
-}
-
-function ArchivePage() {
-  const [filter, setFilter] = useState("All")
-  const categories = ["All", "Sermons", "Events", "Media", "Programs"]
-  return (
-    <main id="main">
-      <PageHero
-        eyebrow="The CSM archive"
-        title="Everything, in one place."
-        text="A complete record of our messages, events, media, and programs from across the years."
-      />
+      </>) : (
+      /* ── ARCHIVE TAB ── */
       <section className="section page-shell">
         <div className="filter-row">
-          <SectionHeading eyebrow="Browse all" title="Find what you're looking for." />
+          <SectionHeading eyebrow="The CSM Archive" title="Everything, in one place." text="All our messages, events, media, and programs." />
           <div className="filters">
-            {categories.map((c) => (
-              <button
-                key={c}
-                className={filter === c ? "active" : ""}
-                onClick={() => setFilter(c)}
-              >
-                {c}
-              </button>
+            {["All","Sermons","Events"].map((c) => (
+              <button key={c} className={archiveFilter === c ? "active" : ""} onClick={() => setArchiveFilter(c)}>{c}</button>
             ))}
           </div>
         </div>
         <Reveal stagger className="archive-grid">
-          {[...sermons, ...events.map((e) => ({
-            id: e.title,
-            title: e.title,
-            series: e.place,
-            year: "2026",
-            thumbnail: e.image,
-            youtubeId: null,
-          }))].map((item, i) => (
+          {[
+            ...sermons.map(s => ({ type: "Sermons", title: s.title, sub: s.series, year: s.year, thumb: s.thumbnail })),
+            ...events.map(e => ({ type: "Events", title: e.title, sub: e.place, year: e.type === "Past" ? "Past" : "Upcoming", thumb: e.image })),
+          ]
+          .filter(item => archiveFilter === "All" || item.type === archiveFilter)
+          .map((item, i) => (
             <article key={i} className="archive-card">
               <div className="archive-thumb">
-                <img src={"thumbnail" in item ? item.thumbnail : photos[i % photos.length]} alt={item.title} loading="lazy" />
+                <img src={item.thumb} alt={item.title} loading="lazy" />
               </div>
               <div className="archive-body">
-                <span className="sermon-year">{item.year}</span>
+                <span className="sermon-year">{item.year} · {item.type}</span>
                 <h3>{item.title}</h3>
-                <p>{"series" in item ? item.series : ""}</p>
+                <p>{item.sub}</p>
               </div>
             </article>
           ))}
         </Reveal>
       </section>
+      )}
       <PartnerBand />
     </main>
   )
@@ -2554,7 +2546,6 @@ export default function App() {
       "/services": "Services · Choice Souls Media",
       "/events": "Events · Choice Souls Media",
       "/sermons": "Sermons · Choice Souls Media",
-      "/archive": "Archive · Choice Souls Media",
       "/testimonies": "Testimonies · Choice Souls Media",
       "/faqs": "FAQs · Choice Souls Media",
       "/gallery": "Gallery · Choice Souls Media",
@@ -2570,7 +2561,6 @@ export default function App() {
     "/services": <ServicesPage />,
     "/events": <Events />,
     "/sermons": <SermonsPage />,
-    "/archive": <ArchivePage />,
     "/testimonies": <TestimoniesPage />,
     "/faqs": <FAQsPage />,
     "/gallery": <Gallery openLightbox={setLightbox} />,
