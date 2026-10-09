@@ -561,15 +561,24 @@ function Navbar({ path }: { path: string }) {
   const [open, setOpen] = useState(false)
   const [closing, setClosing] = useState(false)
 
+  // Close menu automatically whenever the route changes
+  useEffect(() => {
+    if (open) {
+      setClosing(true)
+      const t = setTimeout(() => { setOpen(false); setClosing(false) }, 280)
+      return () => clearTimeout(t)
+    }
+  }, [path])
+
   const closeMenu = () => {
     setClosing(true)
-    setTimeout(() => { setOpen(false); setClosing(false) }, 300)
+    setTimeout(() => { setOpen(false); setClosing(false) }, 280)
   }
 
   return (
     <header className="nav-wrap">
       <nav className="navbar" aria-label="Main navigation">
-        <Link href="/" className="brand" onClick={closeMenu}>
+        <Link href="/" className="brand">
           <span className="brand-mark">
             <img src={logo} alt="Choice Souls Media logo" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
           </span>
@@ -585,7 +594,7 @@ function Navbar({ path }: { path: string }) {
         <Link href="/partner" className="button nav-cta">
           PARTNER WITH US <Icon name="arrow" size={16} />
         </Link>
-        <button className="menu-button" aria-label="Open menu" onClick={() => setOpen(true)}>
+        <button className="menu-button" aria-label="Open menu" onClick={() => { setOpen(true); setClosing(false) }}>
           <Icon name="menu" />
         </button>
       </nav>
@@ -602,13 +611,14 @@ function Navbar({ path }: { path: string }) {
         </div>
         <div className="mobile-nav-links">
           {nav.map(([label, href]) => (
-            <Link key={href} href={href} className={path === href ? "active" : ""} onClick={closeMenu}>
+            <Link key={href} href={href} className={path === href ? "active" : ""}>
               {label}
             </Link>
           ))}
         </div>
-        <div className="mobile-footer-actions">
-          <Link href="/partner" className="button" onClick={closeMenu}>
+        {/* Partner button closer to the links, not pushed to the bottom */}
+        <div className="mobile-partner-btn">
+          <Link href="/partner" className="button">
             PARTNER WITH US <Icon name="arrow" size={16} />
           </Link>
         </div>
