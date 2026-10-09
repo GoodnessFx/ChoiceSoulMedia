@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
-import logo from "./assets/csmreallogo.jpeg"
+import logo from "./assets/csmreallogo-removebg.png"
 import aboutImg1 from "./assets/choiceaboutimage.jpeg"
 import aboutImg2 from "./assets/choiceaboutimage2.jpeg"
 const adminPath = "/xk9-admin-console-7f3a"
@@ -297,6 +297,7 @@ const team = [
 
 const nav = [
   ["HOME", "/"],
+  ["ABOUT", "/about"],
   ["SERVICES", "/services"],
   ["EVENTS", "/events"],
   ["SERMONS", "/sermons"],
@@ -558,10 +559,17 @@ function Reveal({
 
 function Navbar({ path }: { path: string }) {
   const [open, setOpen] = useState(false)
+  const [closing, setClosing] = useState(false)
+
+  const closeMenu = () => {
+    setClosing(true)
+    setTimeout(() => { setOpen(false); setClosing(false) }, 300)
+  }
+
   return (
     <header className="nav-wrap">
       <nav className="navbar" aria-label="Main navigation">
-        <Link href="/" className="brand">
+        <Link href="/" className="brand" onClick={closeMenu}>
           <span className="brand-mark">
             <img src={logo} alt="Choice Souls Media logo" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
           </span>
@@ -569,11 +577,7 @@ function Navbar({ path }: { path: string }) {
         </Link>
         <div className="nav-links">
           {nav.map(([label, href]) => (
-            <Link
-              key={href}
-              href={href}
-              className={path === href ? "active" : ""}
-            >
+            <Link key={href} href={href} className={path === href ? "active" : ""}>
               {label}
             </Link>
           ))}
@@ -581,40 +585,30 @@ function Navbar({ path }: { path: string }) {
         <Link href="/partner" className="button nav-cta">
           PARTNER WITH US <Icon name="arrow" size={16} />
         </Link>
-        <button
-          className="menu-button"
-          aria-label="Open menu"
-          onClick={() => setOpen(true)}
-        >
+        <button className="menu-button" aria-label="Open menu" onClick={() => setOpen(true)}>
           <Icon name="menu" />
         </button>
       </nav>
-      {/* Mobile overlay backdrop */}
-      {open && <div className="mobile-backdrop" onClick={() => setOpen(false)} />}
-      <div className={`mobile-menu ${open ? "open" : ""}`} aria-hidden={!open}>
+      {open && <div className={`mobile-backdrop ${closing ? "closing" : ""}`} onClick={closeMenu} />}
+      <div className={`mobile-menu ${open ? "open" : ""} ${closing ? "closing" : ""}`} aria-hidden={!open}>
         <div className="mobile-head">
           <div className="mobile-brand">
             <img src={logo} alt="Choice Souls Media" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
             <span>CHOICE SOULS MEDIA</span>
           </div>
-          <button aria-label="Close menu" onClick={() => setOpen(false)}>
+          <button aria-label="Close menu" onClick={closeMenu}>
             <Icon name="close" />
           </button>
         </div>
         <div className="mobile-nav-links">
           {nav.map(([label, href]) => (
-            <Link
-              key={href}
-              href={href}
-              className={path === href ? "active" : ""}
-              onClick={() => setOpen(false)}
-            >
+            <Link key={href} href={href} className={path === href ? "active" : ""} onClick={closeMenu}>
               {label}
             </Link>
           ))}
         </div>
         <div className="mobile-footer-actions">
-          <Link href="/partner" className="button" onClick={() => setOpen(false)}>
+          <Link href="/partner" className="button" onClick={closeMenu}>
             PARTNER WITH US <Icon name="arrow" size={16} />
           </Link>
         </div>
@@ -2798,6 +2792,7 @@ export default function App() {
   useEffect(() => {
     const names: Record<string, string> = {
       "/": "Choice Souls Media · Purpose in motion",
+      "/about": "About · Choice Souls Media",
       "/about": "About · Choice Souls Media",
       "/services": "Services · Choice Souls Media",
       "/events": "Events · Choice Souls Media",
