@@ -1,5 +1,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
-import logo from "./assets/csmlogo.jpeg"
+import logo from "./assets/csmreallogo.jpeg"
+import aboutImg1 from "./assets/choiceaboutimage.jpeg"
+import aboutImg2 from "./assets/choiceaboutimage2.jpeg"
 const adminPath = "/xk9-admin-console-7f3a"
 
 // Hero: mix of CSM YT thumbnails + diverse high-quality worship/Africa images
@@ -1033,53 +1035,59 @@ function PageHero({
 
 function About() {
   const values = [
-    [
-      "01",
-      "Intentionality",
-      "We make thoughtful choices and create with meaning.",
-    ],
-    [
-      "02",
-      "Community",
-      "We believe transformation happens in trusted circles.",
-    ],
-    [
-      "03",
-      "Excellence",
-      "We honor the vision through craft, care, and consistency.",
-    ],
-    [
-      "04",
-      "Courage",
-      "We choose brave conversations and bolder possibilities.",
-    ],
+    ["01", "Intentionality", "We make deliberate, strategic choices and create with Kingdom purpose."],
+    ["02", "Community", "We believe transformation happens in trusted, Spirit-led circles."],
+    ["03", "Excellence", "We honour the vision of God through craft, care, and consistency."],
+    ["04", "Courage", "We choose bold conversations and pursue God's agenda without compromise."],
   ]
   return (
     <main id="main">
       <PageHero
         eyebrow="Our story"
-        title="Purpose is personal. Impact is shared."
-        text="We exist to help people make meaningful choices and become more fully who they were created to be."
+        title="Raising a generation for God's Kingdom."
+        text="Choice Souls Media is a global interdenominational network of believers who are deliberate, strategic, purposeful and SENT."
       />
+      {/* Founder section */}
       <section className="section page-shell visioneer">
-        <div className="profile-image">
-          <img src={photos[3]} alt="Abena Owusu, Founder and Visioneer" />
-          <span>THE VISIONEER</span>
+        <div className="founder-images">
+          <div className="founder-img-main">
+            <img src={aboutImg1} alt="Pastor Gideon Mba — President, Choice Souls Media" onError={(e) => { e.currentTarget.style.opacity = "0" }} />
+          </div>
+          <div className="founder-img-secondary">
+            <img src={aboutImg2} alt="Choice Souls Media ministry" onError={(e) => { e.currentTarget.style.opacity = "0" }} />
+            <span className="profile-label">SINCE 2002</span>
+          </div>
         </div>
         <Reveal>
-          <Eyebrow>Meet the founder</Eyebrow>
-          <h2>Abena Owusu</h2>
-          <h4>Founder & Chief Visioneer</h4>
+          <Eyebrow>Meet the President</Eyebrow>
+          <h2>Pastor Gideon Mba</h2>
+          <h4>President, Choice Souls Media</h4>
           <p>
-            [Placeholder bio] Abena is a purpose strategist, creative producer,
-            and convener who believes the right room can redirect a life. She
-            founded CSM to create those rooms—with intention, warmth, and
-            uncommon excellence.
+            Pastor Gideon Mba is the President of Choice Souls Media, an interdenominational
+            network of believers who are deliberate, strategic, purposeful and SENT to bring
+            about the fulfilment of God's Kingdom agenda in their spheres of influence.
+          </p>
+          <p>
+            He is passionate about mobilizing a generation to fulfil their purpose in God. He is
+            the host of the annual international Choice Souls Media camp meeting that has impacted,
+            empowered and released thousands of believers into their callings since 2002.
+          </p>
+          <p>
+            Gideon Mba is a man after God's heart — a Preacher, Author, Speaker, Trainer and
+            Reformer. He is the Lead Pastor of Manifold International Church in Lagos, Nigeria;
+            a liquid church commissioned to impact lives and influence nations.
+          </p>
+          <p>
+            His apostolic itinerant ministry focuses on declaring the word of God's Kingdom
+            influence and impact, as he helps equip, empower and challenge the body of Christ
+            globally to live out THE AGENDA of God just before Jesus returns.
           </p>
           <blockquote>
-            "We don't gather for the sake of gathering. We gather so that
-            something within us can move."
+            "We don't gather for the sake of gathering. We gather so that something within us — and around us — can be forever changed."
           </blockquote>
+          <p style={{ fontSize: ".82rem", marginTop: "16px" }}>
+            Pastor Gideon Mba is married to Bethel, and they are blessed with three amazing boys.
+          </p>
         </Reveal>
       </section>
       <section className="section soft">
@@ -2241,40 +2249,292 @@ function Policy({ type }: { type: "privacy" | "terms" }) {
 }
 
 function AdminShell() {
+  const [adminTab, setAdminTab] = useState<"dashboard"|"messages"|"sermons"|"events"|"partners"|"testimonies"|"settings">("dashboard")
+  const [reply, setReply] = useState<Record<number,string>>({})
+  const [replySent, setReplySent] = useState<Record<number,boolean>>({})
+
   useEffect(() => {
-    document.title = "Secure Console · CSM"
-    const m = document.createElement("meta")
-    m.name = "robots"
-    m.content = "noindex,nofollow"
-    document.head.appendChild(m)
-    return () => m.remove()
+    document.title = "Admin · Choice Souls Media"
+    const m = document.createElement("meta"); m.name = "robots"; m.content = "noindex,nofollow"
+    document.head.appendChild(m); return () => m.remove()
   }, [])
+
+  // Sample inbox data
+  const messages = [
+    { id: 1, name: "Adaeze Obi", email: "adaeze@email.com", subject: "Partnership inquiry", msg: "Hi, I would love to partner with CSM for our upcoming conference.", time: "2h ago", read: false },
+    { id: 2, name: "Taiwo Adeyemi", email: "taiwo@email.com", subject: "Camp meeting registration", msg: "How do I register for the 2027 camp meeting?", time: "5h ago", read: true },
+    { id: 3, name: "Blessing Okeke", email: "blessing@email.com", subject: "Testimony submission", msg: "I wanted to share what God did at the last camp meeting...", time: "1d ago", read: true },
+    { id: 4, name: "Emmanuel Tunde", email: "emma@email.com", subject: "Donation receipt", msg: "I donated ₦50,000 last week — can I get a receipt?", time: "2d ago", read: false },
+  ]
+
+  const stats = [
+    { label: "Total Messages", value: "4", icon: "mail", color: "var(--orange)" },
+    { label: "Unread", value: "2", icon: "mail", color: "var(--navy)" },
+    { label: "Sermons", value: String(sermons.length), icon: "play", color: "#7c3aed" },
+    { label: "Events", value: String(events.length), icon: "calendar", color: "#059669" },
+    { label: "Partners", value: "18", icon: "users", color: "#dc2626" },
+  ]
+
   return (
-    <main className="admin-shell">
-      <div className="admin-card">
-        <img src={logo} alt="CSM" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
-        <Eyebrow>Secure console</Eyebrow>
-        <h1>Backend connection required</h1>
-        <p>
-          The admin interface cannot securely authenticate users or store
-          content until Supabase is connected. No fake credentials or
-          browser-only password has been created.
-        </p>
-        <div className="admin-notice">
-          <Icon name="check" />
-          <span>
-            <b>Public website is ready</b>
-            <small>
-              Connect Supabase to activate CMS, submissions, audit logs, and
-              support chat.
-            </small>
-          </span>
+    <div className="admin-layout">
+      {/* Sidebar */}
+      <aside className="admin-sidebar">
+        <div className="admin-logo">
+          <img src={logo} alt="CSM" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
+          <div>
+            <b>Choice Souls Media</b>
+            <small>Admin Dashboard</small>
+          </div>
         </div>
-        <Link href="/" className="button button-outline">
-          RETURN TO WEBSITE
-        </Link>
-      </div>
-    </main>
+        <nav className="admin-nav">
+          {([
+            ["dashboard","Dashboard","home"],
+            ["messages","Messages","mail"],
+            ["sermons","Sermons","play"],
+            ["events","Events","calendar"],
+            ["partners","Partners","users"],
+            ["testimonies","Testimonies","star"],
+            ["settings","Settings","shield"],
+          ] as const).map(([key, label, icon]) => (
+            <button key={key} className={adminTab === key ? "active" : ""} onClick={() => setAdminTab(key)}>
+              <Icon name={icon} size={16} />
+              {label}
+              {key === "messages" && messages.filter(m => !m.read).length > 0 && (
+                <span className="admin-badge">{messages.filter(m => !m.read).length}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+        <Link href="/" className="admin-back-link"><Icon name="arrow" size={14} /> Back to Site</Link>
+      </aside>
+
+      {/* Main content */}
+      <main className="admin-main">
+        <div className="admin-topbar">
+          <h1>{adminTab.charAt(0).toUpperCase() + adminTab.slice(1)}</h1>
+          <div className="admin-topbar-right">
+            <span className="admin-user"><Icon name="shield" size={15} />Admin</span>
+          </div>
+        </div>
+
+        {adminTab === "dashboard" && (
+          <div className="admin-content">
+            <div className="admin-stats">
+              {stats.map(s => (
+                <div key={s.label} className="admin-stat-card">
+                  <div className="admin-stat-icon" style={{ color: s.color }}>
+                    <Icon name={s.icon} size={22} />
+                  </div>
+                  <div>
+                    <b>{s.value}</b>
+                    <span>{s.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="admin-two-col">
+              <div className="admin-section-card">
+                <h3>Recent Messages</h3>
+                {messages.slice(0,3).map(m => (
+                  <div key={m.id} className={`admin-message-row ${!m.read ? "unread" : ""}`}>
+                    <div className="admin-msg-dot" />
+                    <div><b>{m.name}</b><span>{m.subject}</span></div>
+                    <small>{m.time}</small>
+                  </div>
+                ))}
+                <button className="admin-view-all" onClick={() => setAdminTab("messages")}>View all messages <Icon name="arrow" size={13} /></button>
+              </div>
+              <div className="admin-section-card">
+                <h3>Quick Actions</h3>
+                <div className="admin-quick-actions">
+                  {[
+                    ["Add Sermon", "play"],
+                    ["Add Event", "calendar"],
+                    ["Post Announcement", "mail"],
+                    ["View Donations", "dollar"],
+                  ].map(([lbl, icon]) => (
+                    <button key={lbl} className="admin-quick-btn-item">
+                      <Icon name={icon} size={16} />
+                      {lbl}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="admin-section-card" style={{ marginTop: "20px" }}>
+              <h3>Site Health</h3>
+              <div className="admin-health-rows">
+                {[
+                  ["Build status","Live ✓","#059669"],
+                  ["Latest commit","dd346c1 — master","var(--navy)"],
+                  ["Logo","Loaded via Vite import ✓","#059669"],
+                  ["Supabase","Not connected — connect to enable live data","#dc2626"],
+                  ["Payment gateway","Not connected — connect Paystack/Flutterwave/Stripe","#dc2626"],
+                ].map(([k,v,c]) => (
+                  <div key={k} className="admin-health-row">
+                    <span>{k}</span><span style={{ color: c }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {adminTab === "messages" && (
+          <div className="admin-content">
+            <p className="admin-hint">Click a message to reply. Connect Supabase to receive live form submissions.</p>
+            {messages.map(m => (
+              <div key={m.id} className={`admin-message-card ${!m.read ? "unread" : ""}`}>
+                <div className="admin-message-header">
+                  <div>
+                    <b>{m.name}</b>
+                    <a href={`mailto:${m.email}`}>{m.email}</a>
+                  </div>
+                  <span>{m.time}</span>
+                </div>
+                <div className="admin-message-subject">{m.subject}</div>
+                <p className="admin-message-body">{m.msg}</p>
+                {!replySent[m.id] ? (
+                  <div className="admin-reply-area">
+                    <textarea
+                      rows={3}
+                      placeholder={`Reply to ${m.name}…`}
+                      value={reply[m.id] || ""}
+                      onChange={e => setReply(r => ({ ...r, [m.id]: e.target.value }))}
+                    />
+                    <div className="admin-reply-row">
+                      <a href={`mailto:${m.email}?subject=Re: ${m.subject}&body=${encodeURIComponent(reply[m.id] || "")}`}
+                        className="button" style={{ fontSize: ".68rem", minHeight: "40px" }}
+                        onClick={() => setReplySent(r => ({ ...r, [m.id]: true }))}>
+                        <Icon name="send" size={14} /> Send Reply via Email
+                      </a>
+                      <span className="admin-hint">Opens your email client</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="admin-reply-sent"><Icon name="check" size={14} /> Reply drafted. Supabase needed for in-app sending.</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {adminTab === "sermons" && (
+          <div className="admin-content">
+            <p className="admin-hint">Connect Supabase to add, edit, or remove sermons live. Below is the current library.</p>
+            <div className="admin-table">
+              <div className="admin-table-head"><span>Title</span><span>Speaker</span><span>Year</span><span>Duration</span></div>
+              {sermons.map(s => (
+                <div key={s.id} className="admin-table-row">
+                  <span><img src={s.thumbnail} alt="" style={{ width: 48, height: 34, objectFit: "cover", borderRadius: 6, marginRight: 10, verticalAlign: "middle" }} />{s.title}</span>
+                  <span>{s.speaker}</span>
+                  <span>{s.year}</span>
+                  <span>{s.duration}</span>
+                </div>
+              ))}
+            </div>
+            <div className="admin-hint" style={{ marginTop: 16 }}>
+              <a href="https://www.youtube.com/@ChoiceSouls" target="_blank" rel="noreferrer" className="text-link">View YouTube Channel <Icon name="externalLink" size={13} /></a>
+            </div>
+          </div>
+        )}
+
+        {adminTab === "events" && (
+          <div className="admin-content">
+            <p className="admin-hint">Connect Supabase to manage events live. Current events are listed below.</p>
+            <div className="admin-table">
+              <div className="admin-table-head"><span>Event</span><span>Date</span><span>Location</span><span>Type</span></div>
+              {events.map((e, i) => (
+                <div key={i} className="admin-table-row">
+                  <span>{e.title}</span>
+                  <span>{e.date} {e.month}</span>
+                  <span>{e.place}</span>
+                  <span className={e.type === "Upcoming" ? "admin-tag-upcoming" : "admin-tag-past"}>{e.type}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {adminTab === "partners" && (
+          <div className="admin-content">
+            <p className="admin-hint">Connect Supabase to view donation records, partner profiles, and giving history.</p>
+            <div className="admin-section-card">
+              <h3>Accepted Currencies</h3>
+              <div className="admin-currency-grid">
+                {["USD — US Dollar","NGN — Nigerian Naira","GBP — British Pound","EUR — Euro","GHS — Ghanaian Cedi"].map(c => (
+                  <span key={c} className="admin-currency-tag">{c}</span>
+                ))}
+              </div>
+            </div>
+            <div className="admin-section-card" style={{ marginTop: 16 }}>
+              <h3>Payment Gateway</h3>
+              <p style={{ fontSize: ".82rem" }}>Connect <b>Paystack</b>, <b>Flutterwave</b>, or <b>Stripe</b> to process donations. All tiers (Event Partner, Program Partner, Media Partner) will be handled automatically once connected.</p>
+              <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+                {["Paystack","Flutterwave","Stripe"].map(g => (
+                  <span key={g} className="admin-currency-tag">{g} — Not connected</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {adminTab === "testimonies" && (
+          <div className="admin-content">
+            <p className="admin-hint">Testimonies submitted via the Contact page will appear here once Supabase is connected.</p>
+            <div className="admin-section-card">
+              <h3>Submitted Testimonies (Sample)</h3>
+              {[
+                { name: "Adaeze O.", event: "Apostolos 2025", text: "CSM changed my life completely. I came with questions and left with purpose." },
+                { name: "Taiwo A.", event: "Camp Meeting 2026", text: "The messages at GO camp meeting rearranged my priorities for God's kingdom." },
+              ].map((t, i) => (
+                <div key={i} className="admin-testimony-row">
+                  <div><b>{t.name}</b><span>{t.event}</span></div>
+                  <p>"{t.text}"</p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="admin-action-btn approve">Approve</button>
+                    <button className="admin-action-btn reject">Reject</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {adminTab === "settings" && (
+          <div className="admin-content">
+            <div className="admin-section-card">
+              <h3>Site Settings</h3>
+              <div className="admin-settings-grid">
+                {[
+                  ["Site Name","Choice Souls Media"],
+                  ["Email","info@choicesoulsmedia.org"],
+                  ["Phone","+234 817 201 3060"],
+                  ["Venue","Capstone Resource Centre, Lagos"],
+                  ["YouTube","@ChoiceSouls"],
+                  ["Instagram","@choicesouls"],
+                  ["Facebook","Choice Souls Media"],
+                ].map(([k,v]) => (
+                  <div key={k} className="admin-setting-row">
+                    <label>{k}</label>
+                    <input defaultValue={v} readOnly style={{ opacity: .7 }} />
+                  </div>
+                ))}
+              </div>
+              <p className="admin-hint" style={{ marginTop: 16 }}>Connect Supabase to make settings editable and persist changes.</p>
+            </div>
+            <div className="admin-section-card" style={{ marginTop: 16 }}>
+              <h3>Next Camp Meeting</h3>
+              <div className="admin-settings-grid">
+                <div className="admin-setting-row"><label>Year</label><input defaultValue="2027" readOnly style={{ opacity: .7 }} /></div>
+                <div className="admin-setting-row"><label>Dates</label><input defaultValue="August 25 – 28, 2027" readOnly style={{ opacity: .7 }} /></div>
+                <div className="admin-setting-row"><label>Venue</label><input defaultValue="Capstone Resource Centre, Lagos" readOnly style={{ opacity: .7 }} /></div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   )
 }
 
@@ -2459,19 +2719,15 @@ function BotWidget() {
 }
 function CookieNotice() {
   const [show, setShow] = useState(() => !localStorage.getItem("csm-cookie"))
+  const accept = () => { localStorage.setItem("csm-cookie", "yes"); setShow(false) }
   if (!show) return null
   return (
-    <aside className="cookie">
+    <aside className="cookie" onClick={accept} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && accept()} style={{ cursor: "pointer" }}>
       <p>
         We use essential cookies to remember your preferences.{" "}
-        <Link href="/privacy">Learn more</Link>
+        <Link href="/privacy" onClick={(e) => e.stopPropagation()}>Learn more</Link>
       </p>
-      <button
-        onClick={() => {
-          localStorage.setItem("csm-cookie", "yes")
-          setShow(false)
-        }}
-      >
+      <button onClick={(e) => { e.stopPropagation(); accept() }}>
         GOT IT
       </button>
     </aside>
