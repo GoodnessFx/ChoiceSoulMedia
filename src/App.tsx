@@ -2,81 +2,222 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react"
 import logo from "./assets/csmreallogo-removebg.png"
 import aboutImg1 from "./assets/choiceaboutimage.jpeg"
 import aboutImg2 from "./assets/choiceaboutimage2.jpeg"
+import ubaAccountImg from "./assets/uba-account.png"
 const adminPath = "/xk9-admin-console-7f3a"
 
-// Hero: mix of CSM YT thumbnails + diverse high-quality worship/Africa images
+type GalleryItem = {
+  id: string
+  src: string
+  category: "All" | "Summits" | "Camp Meeting" | "Leadership" | "Archive"
+  event: string
+  year: string
+  alt: string
+}
+
+type EventItem = {
+  id: string
+  date: string
+  month: string
+  year: string
+  title: string
+  theme: string
+  place: string
+  type: "Upcoming" | "Past"
+  image: string
+  time: string
+  summary: string
+  message: string
+  details: string
+  targetDate?: string
+  registrationLink?: string
+  locationLink?: string
+  watchLink?: string
+  audioLink?: string
+  gallery: string[]
+}
+
+type BotAction = {
+  label: string
+  href?: string
+  prompt?: string
+}
+
+type BotMessage = {
+  from: "bot" | "user"
+  text: string
+  actions?: BotAction[]
+}
+
+const CONTACT_EMAIL = "choicesoulsm@gmail.com"
+const CONTACT_PHONE = "+234 817 201 3060"
+const YOUTUBE_CHANNEL = "https://www.youtube.com/@ChoiceSouls"
+const INSTAGRAM_LINK = "https://www.instagram.com/choicesouls/"
+const FACEBOOK_LINK = "https://www.facebook.com/choicesoulsMedia"
+const WHATSAPP_LINK = "https://wa.me/2348172013060"
+const SENT_SUMMIT_REGISTRATION = "https://tinyurl.com/sentsummit"
+const SENT_SUMMIT_MAP = "https://www.google.com/maps/search/?api=1&query=Radisson+Blu+Anchorage+Hotel,+Ozumba+Mbadiwe,+Victoria+Island,+Lagos"
+const CAMP_MEETING_MAP = "https://www.google.com/maps/search/?api=1&query=25+McEwen+Street,+Alagomeji,+Lagos"
+
+// Hero and event visuals
 const CSM_IMAGES = {
   hero: [
+    "/sent-summit-poster.png",
+    aboutImg1,
+    aboutImg2,
     "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=85",
     "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=85",
-    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1400&q=85",
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=85",
-    "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=1400&q=85",
-    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1400&q=85",
   ],
   events: [
+    "/sent-summit-poster.png",
+    aboutImg1,
+    aboutImg2,
     "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
     "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=85",
-  ],
-  // Gallery — mix CSM YT thumbnails with community worship imagery
-  gallery: [
-    "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=900&q=85",
-    "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=900&q=85",
-    "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=85",
+    "https://img.youtube.com/vi/UWNyyteMj7g/hqdefault.jpg",
   ],
 }
 
-const photos = CSM_IMAGES.gallery
+const galleryItems: GalleryItem[] = [
+  {
+    id: "sent-summit-poster",
+    src: "/sent-summit-poster.png",
+    category: "Summits",
+    event: "Sent Summit",
+    year: "2026",
+    alt: "Sent Summit 2026 event poster",
+  },
+  {
+    id: "gideon-formal",
+    src: aboutImg1,
+    category: "Leadership",
+    event: "Choice Souls Media",
+    year: "2026",
+    alt: "Pastor Gideon Mba portrait in a suit",
+  },
+  {
+    id: "gideon-casual",
+    src: aboutImg2,
+    category: "Leadership",
+    event: "Choice Souls Media",
+    year: "2026",
+    alt: "Pastor Gideon Mba portrait",
+  },
+  {
+    id: "go-2026-thumb",
+    src: "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
+    category: "Camp Meeting",
+    event: "GO",
+    year: "2026",
+    alt: "GO 2026 camp meeting thumbnail",
+  },
+  {
+    id: "apostolos-2025-thumb",
+    src: "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
+    category: "Camp Meeting",
+    event: "Apostolos",
+    year: "2025",
+    alt: "Apostolos 2025 event thumbnail",
+  },
+  {
+    id: "ekklesia-2024-thumb",
+    src: "https://img.youtube.com/vi/UWNyyteMj7g/hqdefault.jpg",
+    category: "Archive",
+    event: "Ekklesia on the Move",
+    year: "2024",
+    alt: "Ekklesia on the Move 2024 archive thumbnail",
+  },
+  {
+    id: "altars-thrones-2023-thumb",
+    src: "https://img.youtube.com/vi/duNrqnjWZ6A/hqdefault.jpg",
+    category: "Archive",
+    event: "Altars and Thrones",
+    year: "2023",
+    alt: "Altars and Thrones 2023 archive thumbnail",
+  },
+  {
+    id: "culture-shift-2022-thumb",
+    src: aboutImg1,
+    category: "Archive",
+    event: "Culture Shift",
+    year: "2022",
+    alt: "Culture Shift 2022 archive image featuring Pastor Gideon Mba",
+  },
+  {
+    id: "city-takers-2021-thumb",
+    src: aboutImg2,
+    category: "Archive",
+    event: "City Takers",
+    year: "2021",
+    alt: "City Takers 2021 archive image",
+  },
+]
 
-// CSM program slides — real past and upcoming events
+const photos = galleryItems.map((item) => item.src)
+
+// CSM program slides
 const programSlides = [
   {
     id: 1,
-    label: "ANNUAL CAMP MEETING 2026",
-    title: "GO — The Missional Generation",
-    subtitle: "Annual Camp Meeting 2026 · Capstone Resource Centre, Lagos",
-    dates: "August 25 – 28, 2026",
+    label: "UPCOMING — KINGDOMCENTRIC 2027",
+    title: "Kingdomcentric",
+    subtitle: "Annual Camp Meeting · Capstone Resource Centre, Lagos",
+    dates: "August 24 – 28, 2027",
+    location: "25 McEwen Street, Alagomeji, Lagos",
+    image: aboutImg1,
+  },
+  {
+    id: 2,
+    label: "PAST EVENT — GO 2026",
+    title: "GO",
+    subtitle: "Annual Camp Meeting 2026 · Choice Souls Media",
+    dates: "2026",
     location: "Lagos, Nigeria",
     image: "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
   },
   {
-    id: 2,
+    id: 3,
     label: "PAST EVENT — APOSTOLOS 2025",
-    title: "Apostolos — The Generation of the Sent Ones",
-    subtitle: "Annual Camp Meeting · Capstone Resource Centre, Lagos",
-    dates: "August 26 – 29, 2025",
-    location: "25 McEwen Street, Alagomeji, Lagos",
+    title: "Apostolos",
+    subtitle: "Annual Camp Meeting · The generation of the sent ones",
+    dates: "2025",
+    location: "Lagos, Nigeria",
     image: "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
   },
   {
-    id: 3,
-    label: "PAST EVENT — CITY TAKERS",
-    title: "City Takers — An Occupying Generation",
-    subtitle: "Annual Camp Meeting · Snug Banquet Hall, Lagos",
-    dates: "August 24 – 27",
-    location: "1/3 Ijaoye Street, Jibowu, Lagos",
-    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=82",
+    id: 4,
+    label: "PAST EVENT — EKKLESIA ON THE MOVE 2024",
+    title: "Ekklesia on the Move",
+    subtitle: "Choice Souls Media annual gathering",
+    dates: "2024",
+    location: "Lagos, Nigeria",
+    image: "https://img.youtube.com/vi/UWNyyteMj7g/hqdefault.jpg",
   },
   {
-    id: 4,
-    label: "PAST EVENT — ALTARS & THRONES",
-    title: "Altars & Thrones — Rise of the KingPriest Generation",
-    subtitle: "Annual Camp Meeting · Snug Banquet Hall, Lagos",
-    dates: "August 29 – September 1",
-    location: "1/3 Ijaoye Street, Jibowu, Lagos",
-    image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1400&q=82",
+    id: 5,
+    label: "PAST EVENT — ALTARS AND THRONES 2023",
+    title: "Altars and Thrones",
+    subtitle: "Choice Souls Media annual gathering",
+    dates: "2023",
+    location: "Lagos, Nigeria",
+    image: "https://img.youtube.com/vi/duNrqnjWZ6A/hqdefault.jpg",
+  },
+  {
+    id: 6,
+    label: "PAST EVENT — CULTURE SHIFT 2022",
+    title: "Culture Shift",
+    subtitle: "Choice Souls Media annual gathering",
+    dates: "2022",
+    location: "Lagos, Nigeria",
+    image: aboutImg1,
+  },
+  {
+    id: 7,
+    label: "PAST EVENT — CITY TAKERS 2021",
+    title: "City Takers",
+    subtitle: "Choice Souls Media annual gathering",
+    dates: "2021",
+    location: "Lagos, Nigeria",
+    image: aboutImg2,
   },
 ]
 
@@ -173,28 +314,28 @@ const sermons = [
 
 const testimonies = [
   {
-    name: "Adwoa N.",
-    event: "Soul Connect 2025",
-    text: "CSM reminded me that purpose isn't something you find alone. It grows when you share the journey with the right people.",
-    image: photos[3],
+    name: "Samuel O.",
+    event: "GO 2026",
+    text: "GO gave me language for the assignment God had already been stirring in my heart. I left with clarity, courage, and community.",
+    image: aboutImg2,
   },
   {
-    name: "Kweku A.",
-    event: "Annual Camp Meeting 2025",
-    text: "I came broken and left with a blueprint. The messages were direct, the community was warm, and God showed up powerfully.",
-    image: photos[1],
+    name: "Deborah A.",
+    event: "Apostolos 2025",
+    text: "Apostolos felt like a commissioning room. The teachings were sharp, the atmosphere was weighty, and my next steps became unmistakably clear.",
+    image: aboutImg1,
   },
   {
-    name: "Blessing O.",
-    event: "The Purpose Summit 2024",
-    text: "For the first time in years I felt seen, challenged, and equipped. CSM doesn't just do events—they create encounters.",
-    image: photos[5],
+    name: "Ezinne M.",
+    event: "Ekklesia on the Move 2024",
+    text: "That gathering stirred me out of passivity. It was not just another conference. It felt like a call back to the center of God's purpose.",
+    image: "/sent-summit-poster.png",
   },
   {
-    name: "Emmanuel T.",
-    event: "Creative Souls Forum",
-    text: "The conversations in that room unlocked a vision I had been sitting on for 3 years. I left and started building the next day.",
-    image: photos[7],
+    name: "Miriam K.",
+    event: "Culture Shift 2022",
+    text: "Culture Shift challenged the way I think, work, and witness. The messages stayed with me long after the event ended.",
+    image: aboutImg2,
   },
 ]
 
@@ -231,68 +372,207 @@ const services = [
   },
 ]
 
-const events = [
+const events: EventItem[] = [
   {
-    date: "25",
-    month: "AUG",
-    title: "Annual Camp Meeting 2027",
-    place: "Capstone Resource Centre, Lagos",
+    id: "sent-summit-2026",
+    date: "15",
+    month: "NOV",
+    year: "2026",
+    title: "Sent Summit",
+    theme: "Marketplace Altars",
+    place: "Radisson Blu, Ozumba Mbadiwe, Victoria Island, Lagos",
     type: "Upcoming",
-    image: CSM_IMAGES.events[0],
-    time: "9:00 AM",
+    image: "/sent-summit-poster.png",
+    time: "3:00 PM",
+    summary: "A focused apostolic gathering for believers carrying kingdom influence into the marketplace.",
+    message: "Engaging your priesthood in the workplace.",
+    details: "Sent Summit is the next major public gathering on the site right now. It is positioned as a sharp, practical room for kingdom-minded professionals, founders, creatives, and believers who want their work to reflect the agenda of God.",
+    targetDate: "2026-11-15T15:00:00",
+    registrationLink: SENT_SUMMIT_REGISTRATION,
+    locationLink: SENT_SUMMIT_MAP,
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: ["/sent-summit-poster.png", aboutImg1, aboutImg2],
   },
   {
-    date: "12",
-    month: "OCT",
-    title: "The Purpose Summit",
-    place: "Lagos, Nigeria",
-    type: "Upcoming",
-    image: CSM_IMAGES.events[1],
-    time: "10:00 AM",
-  },
-  {
-    date: "07",
-    month: "DEC",
-    title: "Kingdom Life Celebration",
-    place: "Lagos, Nigeria",
-    type: "Upcoming",
-    image: CSM_IMAGES.events[2],
-    time: "5:00 PM",
-  },
-  {
-    date: "26",
-    month: "AUG",
-    title: "Apostolos Annual Camp Meeting 2025",
-    place: "Capstone Resource Centre, Lagos",
-    type: "Past",
-    image: CSM_IMAGES.events[3],
-    time: "9:00 AM",
-  },
-  {
-    date: "29",
-    month: "AUG",
-    title: "Altars & Thrones Annual Camp Meeting",
-    place: "Snug Banquet Hall, Lagos",
-    type: "Past",
-    image: CSM_IMAGES.events[4],
-    time: "9:00 AM",
-  },
-  {
+    id: "camp-meeting-2027",
     date: "24",
     month: "AUG",
-    title: "City Takers Annual Camp Meeting",
-    place: "Snug Banquet Hall, Lagos",
+    year: "2027",
+    title: "Kingdomcentric Camp Meeting",
+    theme: "Kingdomcentric",
+    place: "Capstone Resource Centre, Lagos",
+    type: "Upcoming",
+    image: aboutImg1,
+    time: "6:00 PM",
+    summary: "The next camp meeting gathering, built for deep consecration, teaching, prayer, and kingdom alignment.",
+    message: "The next camp meeting countdown now points to 24 August 2027 at 6 PM.",
+    details: "This is the larger annual gathering on the site, separate from Sent Summit. It is positioned as the broader camp meeting experience for the Choice Souls Media community.",
+    targetDate: "2027-08-24T18:00:00",
+    locationLink: CAMP_MEETING_MAP,
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: [aboutImg1, aboutImg2],
+  },
+  {
+    id: "campus-invasion-2027",
+    date: "07",
+    month: "MAR",
+    year: "2027",
+    title: "Campus Invasion",
+    theme: "Revival on Campus",
+    place: "Lagos, Nigeria",
+    type: "Upcoming",
+    image: aboutImg2,
+    time: "4:00 PM",
+    summary: "A campus-focused activation gathering designed to stir conviction, courage, and witness among students.",
+    message: "A strategic outreach expression for students and young leaders.",
+    details: "Campus Invasion sits in the event mix as one of the outreach-focused expressions of the ministry. It is built for prayer, teaching, and direct engagement with students.",
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: [aboutImg2, aboutImg1],
+  },
+  {
+    id: "somebody-pray-2027",
+    date: "19",
+    month: "APR",
+    year: "2027",
+    title: "Somebody Pray",
+    theme: "An atmosphere for prayer",
+    place: "Lagos, Nigeria",
+    type: "Upcoming",
+    image: "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
+    time: "6:00 PM",
+    summary: "A prayer-centered gathering for intercession, alignment, and spiritual burden.",
+    message: "A room for prevailing prayer and prophetic direction.",
+    details: "Somebody Pray is kept simple on the site as one of the live event expressions under the Choice Souls Media calendar.",
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: ["https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg", aboutImg1],
+  },
+  {
+    id: "go-2026",
+    date: "01",
+    month: "DEC",
+    year: "2026",
+    title: "GO",
+    theme: "The missional generation",
+    place: "Choice Souls Media",
     type: "Past",
-    image: CSM_IMAGES.events[5],
-    time: "9:00 AM",
+    image: "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
+    time: "Message archive",
+    summary: "GO 2026 called a generation into mission, obedience, and apostolic movement.",
+    message: "The missional generation.",
+    details: "GO 2026 sits in the archive as one of the defining recent camp meeting themes. The event detail view points visitors to the sermons archive and channel for message follow-up.",
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: ["https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg", aboutImg1],
+  },
+  {
+    id: "apostolos-2025",
+    date: "26",
+    month: "AUG",
+    year: "2025",
+    title: "Apostolos",
+    theme: "The generation of the sent ones",
+    place: "Choice Souls Media",
+    type: "Past",
+    image: "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
+    time: "Message archive",
+    summary: "Apostolos emphasized being sent with clarity, conviction, and spiritual weight.",
+    message: "The generation of the sent ones.",
+    details: "Apostolos 2025 remains one of the core archive entries and is now labeled cleanly by theme and year.",
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: ["https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg", aboutImg2],
+  },
+  {
+    id: "ekklesia-2024",
+    date: "24",
+    month: "AUG",
+    year: "2024",
+    title: "Ekklesia on the Move",
+    theme: "A mobilized church",
+    place: "Choice Souls Media",
+    type: "Past",
+    image: "https://img.youtube.com/vi/UWNyyteMj7g/hqdefault.jpg",
+    time: "Message archive",
+    summary: "Ekklesia on the Move carried the burden of a church that moves, occupies, and carries God's presence into public life.",
+    message: "A mobilized church in motion.",
+    details: "This archive entry has been added directly from the event history you supplied so the timeline on the site is complete.",
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: ["https://img.youtube.com/vi/UWNyyteMj7g/hqdefault.jpg", aboutImg1],
+  },
+  {
+    id: "altars-thrones-2023",
+    date: "29",
+    month: "AUG",
+    year: "2023",
+    title: "Altars and Thrones",
+    theme: "Rise of the king-priest generation",
+    place: "Choice Souls Media",
+    type: "Past",
+    image: "https://img.youtube.com/vi/duNrqnjWZ6A/hqdefault.jpg",
+    time: "Message archive",
+    summary: "A call to priesthood, authority, and consecrated influence.",
+    message: "Rise of the king-priest generation.",
+    details: "Altars and Thrones is now preserved in the archive with its year, theme, image, and follow-up media paths.",
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: ["https://img.youtube.com/vi/duNrqnjWZ6A/hqdefault.jpg", aboutImg2],
+  },
+  {
+    id: "culture-shift-2022",
+    date: "24",
+    month: "AUG",
+    year: "2022",
+    title: "Culture Shift",
+    theme: "Kingdom influence in culture",
+    place: "Choice Souls Media",
+    type: "Past",
+    image: aboutImg1,
+    time: "Message archive",
+    summary: "Culture Shift pressed the urgency of shaping culture rather than merely reacting to it.",
+    message: "Kingdom influence in culture.",
+    details: "The 2022 archive entry now uses a clearer Gideon image so the subject stays fully visible in the card and detail view.",
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: [aboutImg1, aboutImg2],
+  },
+  {
+    id: "city-takers-2021",
+    date: "21",
+    month: "AUG",
+    year: "2021",
+    title: "City Takers",
+    theme: "Occupying every sphere",
+    place: "Choice Souls Media",
+    type: "Past",
+    image: aboutImg2,
+    time: "Message archive",
+    summary: "City Takers framed the believer as a kingdom carrier sent into cities, systems, and spheres of influence.",
+    message: "Occupying every sphere.",
+    details: "City Takers 2021 closes out the restored archive list so the event history now spans 2021 through 2027.",
+    watchLink: YOUTUBE_CHANNEL,
+    audioLink: "/sermons",
+    gallery: [aboutImg2, aboutImg1],
   },
 ]
 
+const lightboxPhotos = Array.from(new Set([
+  ...photos,
+  ...events.flatMap((event) => event.gallery),
+]))
+
 const team = [
-  { name: "Abena Owusu", role: "Founder & Visioneer", image: photos[3] },
-  { name: "Kwame Mensah", role: "Programs Lead", image: photos[1] },
-  { name: "Ama Boateng", role: "Partnerships Director", image: photos[6] },
-  { name: "Nana K. Asare", role: "Creative Director", image: photos[7] },
+  { name: "Pastor Gideon Mba", role: "President, Choice Souls Media", image: aboutImg1 },
+  { name: "Leadership profile 2 coming soon", role: "Placeholder", image: "" },
+  { name: "Leadership profile 3 coming soon", role: "Placeholder", image: "" },
+  { name: "Leadership profile 4 coming soon", role: "Placeholder", image: "" },
+  { name: "Leadership profile 5 coming soon", role: "Placeholder", image: "" },
+  { name: "Leadership profile 6 coming soon", role: "Placeholder", image: "" },
+  { name: "Leadership profile 7 coming soon", role: "Placeholder", image: "" },
 ]
 
 const nav = [
@@ -300,6 +580,7 @@ const nav = [
   ["ABOUT", "/about"],
   ["SERVICES", "/services"],
   ["EVENTS", "/events"],
+  ["GALLERY", "/gallery"],
   ["SERMONS", "/sermons"],
   ["TESTIMONIES", "/testimonies"],
   ["FAQs", "/faqs"],
@@ -316,21 +597,26 @@ function Link({
   href,
   className = "",
   children,
+  onClick,
+  ...rest
 }: {
   href: string
   className?: string
   children: React.ReactNode
-}) {
+} & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   return (
     <a
       href={href}
       className={className}
       onClick={(e) => {
+        onClick?.(e)
+        if (e.defaultPrevented) return
         if (href.startsWith("/")) {
           e.preventDefault()
           go(href)
         }
       }}
+      {...rest}
     >
       {children}
     </a>
@@ -654,18 +940,19 @@ function SectionHeading({
   )
 }
 
-// Clean flip countdown — Aug 25, 2027
-function Countdown() {
-  const target = new Date("2027-08-25T09:00:00")
-  const calc = () => Math.max(0, target.getTime() - Date.now())
+// Clean flip countdown
+function Countdown({ targetDate = "2027-08-24T18:00:00" }: { targetDate?: string }) {
+  const targetTime = new Date(targetDate).getTime()
+  const calc = () => Math.max(0, targetTime - Date.now())
   const [left, setLeft] = useState(calc)
   const prevVals = useRef([-1, -1, -1, -1])
   const [flipping, setFlipping] = useState([false, false, false, false])
 
   useEffect(() => {
+    setLeft(calc())
     const id = setInterval(() => setLeft(calc()), 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [targetTime])
 
   const vals = [
     Math.floor(left / 86400000),
@@ -770,8 +1057,8 @@ function ProgramsCarousel() {
             <Eyebrow>UPCOMING PROGRAM</Eyebrow>
           </div>
           <h3>ANNUAL CAMP MEETING 2027</h3>
-          <p className="upcoming-sub">August 25 – 28, 2027 · Lagos, Nigeria · The missional generation</p>
-          <Countdown />
+          <p className="upcoming-sub">August 24, 2027 · 6 PM · Lagos, Nigeria · Kingdomcentric</p>
+          <Countdown targetDate="2027-08-24T18:00:00" />
         </div>
       </div>
     </section>
@@ -959,17 +1246,19 @@ function EventsPreview() {
 function GalleryGrid({
   images,
   openLightbox,
+  imageIndexes,
 }: {
   images: string[]
   openLightbox: (n: number) => void
+  imageIndexes?: number[]
 }) {
   return (
     <Reveal stagger className="gallery-grid">
       {images.map((p, i) => (
         <button
-          key={p}
+          key={`${p}-${i}`}
           className={`gallery-item g${i + 1}`}
-          onClick={() => openLightbox(i)}
+          onClick={() => openLightbox(imageIndexes?.[i] ?? i)}
           aria-label={`Open gallery photo ${i + 1}`}
         >
           <img src={p} alt={`CSM community moment ${i + 1}`} loading="lazy" />
@@ -1171,7 +1460,7 @@ function About() {
         <Reveal stagger className="team-grid">
           {team.map((m) => (
             <article key={m.name}>
-              <img src={m.image} alt={m.name} loading="lazy" />
+              {m.image ? <img src={m.image} alt={m.name} loading="lazy" /> : <div className="team-placeholder" aria-hidden="true">CSM</div>}
               <h3>{m.name}</h3>
               <p>{m.role}</p>
             </article>
@@ -1238,9 +1527,11 @@ function ServicesPage() {
   )
 }
 
-function Events() {
+function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
   const [filter, setFilter] = useState("All")
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const shown = events.filter((e) => filter === "All" || e.type === filter)
+  const featured = events.find((event) => event.id === "sent-summit-2026")!
   return (
     <main id="main">
       <PageHero
@@ -1250,27 +1541,29 @@ function Events() {
       />
       <section className="featured-event page-shell">
         <div className="featured-image">
-          <img src={events[0].image} alt="" />
+          <img src={featured.image} alt={`${featured.title} event poster`} />
           <span>FEATURED</span>
         </div>
         <div>
           <Eyebrow>Next experience</Eyebrow>
-          <h2>The Purpose Summit</h2>
-          <p>
-            A one-day immersive experience for people ready to turn inner
-            clarity into meaningful action.
-          </p>
+          <h2>{featured.title}: {featured.theme}</h2>
+          <p>{featured.summary} {featured.message}</p>
           <div className="event-meta">
             <span>
               <Icon name="pin" />
-              Accra City Hall
+              {featured.place}
             </span>
-            <span>24 AUG 2026 · 10:00 AM</span>
+            <span>{featured.date} {featured.month} {featured.year} · {featured.time}</span>
           </div>
-          <Countdown />
-          <Link href="/contact" className="button">
-            RESERVE INTEREST <Icon name="arrow" size={17} />
-          </Link>
+          <Countdown targetDate={featured.targetDate} />
+          <div className="event-actions">
+            <a href={featured.registrationLink} className="button" target="_blank" rel="noreferrer">
+              REGISTER <Icon name="arrow" size={17} />
+            </a>
+            <a href={featured.locationLink} className="text-link" target="_blank" rel="noreferrer">
+              OPEN IN GOOGLE MAPS <Icon name="pin" size={15} />
+            </a>
+          </div>
         </div>
       </section>
       <section className="section soft">
@@ -1306,17 +1599,35 @@ function Events() {
                     {e.time} · {e.place}
                   </p>
                 </div>
-                <p>
-                  A curated CSM experience for meaningful conversations, fresh
-                  perspective, and genuine community.
-                </p>
-                <Link
-                  href="/contact"
+                <p>{e.summary}</p>
+                <button
+                  type="button"
                   className="round-arrow"
-                  aria-label={`Details for ${e.title}`}
+                  aria-label={`${expandedId === e.id ? "Hide" : "Show"} details for ${e.title}`}
+                  aria-expanded={expandedId === e.id}
+                  onClick={() => setExpandedId(expandedId === e.id ? null : e.id)}
                 >
-                  <Icon name="arrow" />
-                </Link>
+                  <Icon name={expandedId === e.id ? "close" : "arrow"} />
+                </button>
+                {expandedId === e.id && (
+                  <div className="event-details">
+                    <p>{e.details}</p>
+                    {e.type === "Upcoming" && e.targetDate && <Countdown targetDate={e.targetDate} />}
+                    <div className="event-detail-links">
+                      {e.registrationLink && <a href={e.registrationLink} target="_blank" rel="noreferrer">Register</a>}
+                      {e.locationLink && <a href={e.locationLink} target="_blank" rel="noreferrer">Google Maps</a>}
+                      {e.watchLink && <a href={e.watchLink} target="_blank" rel="noreferrer">Watch messages</a>}
+                      {e.audioLink && <Link href={e.audioLink}>Audio and sermons</Link>}
+                    </div>
+                    <div className="event-detail-gallery">
+                      {e.gallery.map((image, index) => (
+                        <button key={`${image}-${index}`} type="button" onClick={() => openLightbox(lightboxPhotos.indexOf(image))} aria-label={`View ${e.title} image ${index + 1}`}>
+                          <img src={image} alt={`${e.title} media ${index + 1}`} loading="lazy" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </article>
             ))}
           </Reveal>
@@ -1670,6 +1981,8 @@ function FAQsPage() {
 
 function Gallery({ openLightbox }: { openLightbox: (n: number) => void }) {
   const [filter, setFilter] = useState("All")
+  const categories = ["All", "Summits", "Camp Meeting", "Leadership", "Archive"]
+  const shown = galleryItems.filter((item) => filter === "All" || item.category === filter)
   return (
     <main id="main">
       <PageHero
@@ -1679,7 +1992,7 @@ function Gallery({ openLightbox }: { openLightbox: (n: number) => void }) {
       />
       <section className="section page-shell">
         <div className="filters gallery-filters">
-          {["All", "Summits", "Community", "Workshops"].map((f) => (
+          {categories.map((f) => (
             <button
               key={f}
               className={filter === f ? "active" : ""}
@@ -1689,7 +2002,11 @@ function Gallery({ openLightbox }: { openLightbox: (n: number) => void }) {
             </button>
           ))}
         </div>
-        <GalleryGrid images={photos} openLightbox={openLightbox} />
+        <GalleryGrid
+          images={shown.map((item) => item.src)}
+          imageIndexes={shown.map((item) => lightboxPhotos.indexOf(item.src))}
+          openLightbox={openLightbox}
+        />
       </section>
     </main>
   )
@@ -1996,6 +2313,16 @@ function Partner() {
         </div>
       </section>
 
+      <section className="section page-shell bank-details">
+        <div>
+          <Eyebrow>Bank transfer</Eyebrow>
+          <h2>Give directly to the mission.</h2>
+          <p>UBA · Choice Souls Media · Account number 1006181050</p>
+          <a className="text-link" href={`mailto:${CONTACT_EMAIL}`}>Send proof of payment <Icon name="arrow" size={15} /></a>
+        </div>
+        <img src={ubaAccountImg} alt="UBA account details for Choice Souls Media, account number 1006181050" loading="lazy" />
+      </section>
+
       <section className="section page-shell">
         <SectionHeading
           eyebrow="Why CSM"
@@ -2156,8 +2483,8 @@ function Contact() {
             <article>
               <Icon name="mail" />
               <small>EMAIL / SUPPORT</small>
-              <a href="mailto:info@choicesoulsmedia.org">
-                info@choicesoulsmedia.org
+              <a href={`mailto:${CONTACT_EMAIL}`}>
+                {CONTACT_EMAIL}
               </a>
             </article>
             <article>
@@ -2204,7 +2531,7 @@ function Contact() {
       <div className="map-embed">
         <iframe
           title="Capstone Resource Centre, Lagos"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.5023456789!2d3.3617!3d6.4969!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8b5a2e6f7f7f%3A0x0!2sMcEwen+Street%2C+Alagomeji%2C+Lagos!5e0!3m2!1sen!2sng!4v1234567890"
+          src="https://www.google.com/maps?q=Capstone+Resource+Centre,+25+McEwen+Street,+Alagomeji,+Lagos&output=embed"
           width="100%"
           height="100%"
           style={{ border: 0 }}
@@ -2512,7 +2839,7 @@ function AdminShell() {
               <div className="admin-settings-grid">
                 {[
                   ["Site Name","Choice Souls Media"],
-                  ["Email","info@choicesoulsmedia.org"],
+                  ["Email",CONTACT_EMAIL],
                   ["Phone","+234 817 201 3060"],
                   ["Venue","Capstone Resource Centre, Lagos"],
                   ["YouTube","@ChoiceSouls"],
@@ -2531,7 +2858,7 @@ function AdminShell() {
               <h3>Next Camp Meeting</h3>
               <div className="admin-settings-grid">
                 <div className="admin-setting-row"><label>Year</label><input defaultValue="2027" readOnly style={{ opacity: .7 }} /></div>
-                <div className="admin-setting-row"><label>Dates</label><input defaultValue="August 25 – 28, 2027" readOnly style={{ opacity: .7 }} /></div>
+                <div className="admin-setting-row"><label>Dates</label><input defaultValue="August 24, 2027 · 6 PM" readOnly style={{ opacity: .7 }} /></div>
                 <div className="admin-setting-row"><label>Venue</label><input defaultValue="Capstone Resource Centre, Lagos" readOnly style={{ opacity: .7 }} /></div>
               </div>
             </div>
@@ -2600,7 +2927,7 @@ function Footer() {
           <h4>CONNECT</h4>
           <Link href="/partner">PARTNER WITH US</Link>
           <Link href="/contact">CONTACT</Link>
-          <a href="mailto:info@choicesoulsmedia.org">EMAIL US</a>
+          <a href={`mailto:${CONTACT_EMAIL}`}>EMAIL US</a>
           <Link href="/privacy">PRIVACY</Link>
           <Link href="/terms">TERMS</Link>
         </div>
@@ -2630,23 +2957,9 @@ function Footer() {
 }
 
 // Bot chat widget
-const botReplies: Record<string, string> = {
-  sermons: "You can watch all our sermons on the Sermons page, or subscribe on YouTube @ChoiceSouls. We also have Download Video and Download Audio buttons on every message.",
-  events: "Our next major event is the Annual Camp Meeting — August 25–28, 2027 in Lagos, Nigeria. Visit the Events page to see all upcoming gatherings.",
-  partner: "Visit the Partner page to give or partner with us. We accept USD, NGN, GBP, EUR, and GHS — give once or monthly.",
-  donate: "You can give on our Partner page. We accept USD, NGN, GBP, EUR, and GHS. Every gift moves the mission forward.",
-  contact: "Reach us at hello@choicesoulmedia.org or use the Contact page to send us a message directly.",
-  hello: "Hello! Welcome to Choice Souls Media. How can I help you today?",
-  hi: "Hi there! Great to have you here. How can I assist you?",
-  youtube: "Our YouTube channel is @ChoiceSouls — 806 subscribers and 326 videos. Subscribe and never miss a message!",
-  download: "Yes! Every sermon on our Sermons page has Download Video and Download Audio (MP3) buttons.",
-  camp: "The Annual Camp Meeting 2027 is August 25–28 in Lagos, Nigeria. The flip countdown is live on the homepage!",
-  default: "Thanks for reaching out! Ask me about sermons, events, donations, or partnerships. You can also visit our Contact page.",
-}
-
 function BotWidget() {
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<BotMessage[]>([
     { from: "bot", text: "Hi! I'm the CSM Assistant. Ask me about sermons, events, or how to give 🙏" },
   ])
   const [input, setInput] = useState("")
@@ -2654,10 +2967,30 @@ function BotWidget() {
 
   useEffect(() => { msgEnd.current?.scrollIntoView({ behavior: "smooth" }) }, [messages])
 
-  const reply = useCallback((text: string) => {
+  const reply = useCallback((text: string): BotMessage => {
     const lower = text.toLowerCase()
-    const key = Object.keys(botReplies).find((k) => lower.includes(k)) || "default"
-    return botReplies[key]
+    if (/\b(hello|hi|hey)\b/.test(lower)) {
+      return { from: "bot", text: "Hello! Welcome to Choice Souls Media. I can help with events, sermons, giving, or contacting the team. What would you like to know?" }
+    }
+    if (lower.includes("contact") || lower.includes("email") || lower.includes("phone")) {
+      return { from: "bot", text: `You can email our team at ${CONTACT_EMAIL} or call/WhatsApp ${CONTACT_PHONE}.`, actions: [{ label: "Contact page", href: "/contact" }, { label: "Email the team", href: `mailto:${CONTACT_EMAIL}` }, { label: "WhatsApp", href: WHATSAPP_LINK }] }
+    }
+    if (lower.includes("sent summit") || lower.includes("registration") || lower.includes("register")) {
+      return { from: "bot", text: "Sent Summit: Sunday, 15 November 2026 at 3 PM, Radisson Blu, Ozumba Mbadiwe, Victoria Island, Lagos. Register or open the venue in Google Maps.", actions: [{ label: "Register", href: SENT_SUMMIT_REGISTRATION }, { label: "Google Maps", href: SENT_SUMMIT_MAP }, { label: "Events page", href: "/events" }] }
+    }
+    if (lower.includes("camp meeting") || lower.includes("kingdomcentric")) {
+      return { from: "bot", text: "Kingdomcentric Camp Meeting is listed for 24 August 2027 at 6 PM at Capstone Resource Centre, Lagos. Check the Events page for details and the countdown.", actions: [{ label: "Events page", href: "/events" }, { label: "Google Maps", href: CAMP_MEETING_MAP }] }
+    }
+    if (lower.includes("event") || lower.includes("campus invasion") || lower.includes("somebody pray")) {
+      return { from: "bot", text: "The next event is Sent Summit on 15 November 2026 at 3 PM in Lagos. The calendar also lists Camp Meeting, Somebody Pray, Campus Invasion, and past event archives.", actions: [{ label: "Browse events", href: "/events" }, { label: "Sent Summit registration", href: SENT_SUMMIT_REGISTRATION }] }
+    }
+    if (lower.includes("sermon") || lower.includes("youtube") || lower.includes("watch")) {
+      return { from: "bot", text: "Browse sermons and message archives on the Sermons page, or visit our YouTube channel.", actions: [{ label: "Sermons", href: "/sermons" }, { label: "YouTube", href: YOUTUBE_CHANNEL }] }
+    }
+    if (lower.includes("partner") || lower.includes("donat") || lower.includes("give") || lower.includes("uba") || lower.includes("account")) {
+      return { from: "bot", text: "You can give through the Partner page, or by UBA transfer to Choice Souls Media, account 1006181050. The supplied account graphic is shown on the page.", actions: [{ label: "Partner and giving", href: "/partner" }, { label: "Contact us", href: "/contact" }] }
+    }
+    return { from: "bot", text: `Thanks for your question. I can help with events, sermons, donations, or contact details. For anything else, email ${CONTACT_EMAIL} or visit our Contact page.`, actions: [{ label: "Contact page", href: "/contact" }, { label: "Events", href: "/events" }, { label: "FAQs", href: "/faqs" }] }
   }, [])
 
   const send = (text: string) => {
@@ -2665,7 +2998,7 @@ function BotWidget() {
     setMessages((m) => [...m, { from: "user", text: text.trim() }])
     setInput("")
     setTimeout(() => {
-      setMessages((m) => [...m, { from: "bot", text: reply(text) }])
+      setMessages((m) => [...m, reply(text)])
     }, 650)
   }
 
@@ -2690,7 +3023,18 @@ function BotWidget() {
         </div>
         <div className="bot-messages">
           {messages.map((m, i) => (
-            <div key={i} className={`bot-msg ${m.from}`}>{m.text}</div>
+            <div key={i} className={`bot-msg ${m.from}`}>
+              {m.text}
+              {m.actions && (
+                <div className="bot-message-actions">
+                  {m.actions.map((action) => action.href?.startsWith("/") ? (
+                    <Link key={action.label} href={action.href}>{action.label}</Link>
+                  ) : (
+                    <a key={action.label} href={action.href} target={action.href?.startsWith("http") ? "_blank" : undefined} rel={action.href?.startsWith("http") ? "noreferrer" : undefined}>{action.label}</a>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
           <div ref={msgEnd} />
         </div>
@@ -2750,9 +3094,9 @@ function Lightbox({
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape") close()
-      if (e.key === "ArrowRight") setIndex(((index ?? 0) + 1) % photos.length)
+      if (e.key === "ArrowRight") setIndex(((index ?? 0) + 1) % lightboxPhotos.length)
       if (e.key === "ArrowLeft")
-        setIndex(((index ?? 0) - 1 + photos.length) % photos.length)
+        setIndex(((index ?? 0) - 1 + lightboxPhotos.length) % lightboxPhotos.length)
     }
     window.addEventListener("keydown", key)
     return () => window.removeEventListener("keydown", key)
@@ -2770,22 +3114,22 @@ function Lightbox({
       </button>
       <button
         className="lightbox-prev"
-        onClick={() => setIndex((index - 1 + photos.length) % photos.length)}
+        onClick={() => setIndex((index - 1 + lightboxPhotos.length) % lightboxPhotos.length)}
         aria-label="Previous photo"
       >
         ←
       </button>
-      <img src={photos[index]} alt={`CSM gallery photo ${index + 1}`} />
+      <img src={lightboxPhotos[index]} alt={`CSM media ${index + 1}`} />
       <button
         className="lightbox-next"
-        onClick={() => setIndex((index + 1) % photos.length)}
+        onClick={() => setIndex((index + 1) % lightboxPhotos.length)}
         aria-label="Next photo"
       >
         →
       </button>
       <span>
         {String(index + 1).padStart(2, "0")} /{" "}
-        {String(photos.length).padStart(2, "0")}
+        {String(lightboxPhotos.length).padStart(2, "0")}
       </span>
     </div>
   )
@@ -2803,7 +3147,6 @@ export default function App() {
     const names: Record<string, string> = {
       "/": "Choice Souls Media · Purpose in motion",
       "/about": "About · Choice Souls Media",
-      "/about": "About · Choice Souls Media",
       "/services": "Services · Choice Souls Media",
       "/events": "Events · Choice Souls Media",
       "/sermons": "Sermons · Choice Souls Media",
@@ -2820,7 +3163,7 @@ export default function App() {
     "/": <Home openLightbox={setLightbox} />,
     "/about": <About />,
     "/services": <ServicesPage />,
-    "/events": <Events />,
+    "/events": <Events openLightbox={setLightbox} />,
     "/sermons": <SermonsPage />,
     "/testimonies": <TestimoniesPage />,
     "/faqs": <FAQsPage />,
