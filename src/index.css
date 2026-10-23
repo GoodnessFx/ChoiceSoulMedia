@@ -247,7 +247,15 @@ footer{background:var(--navy-dark);color:#fff;padding-top:70px}.footer-grid{disp
 /* ——— REDUCED SPACING ——— */
 .section-heading{margin-bottom:22px}
 .section-heading h2{margin-bottom:8px}
-.section{padding:52px 0}
+.section{padding:52px 0;}
+@media(max-width:480px){
+  .page-shell{width:calc(100% - 24px);margin-inline:auto;}
+  .upcoming-program-grid{display:flex;flex-direction:column;align-items:center;}
+  .upcoming-program-box{width:100%;padding:20px;margin:12px 0;}
+  .carousel-slide{height:300px;}
+}
+
+
 .soft.section{padding:52px 0}
 
 /* ——— COUNTDOWN MOBILE ——— */
