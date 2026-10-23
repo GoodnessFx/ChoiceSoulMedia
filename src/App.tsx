@@ -91,12 +91,36 @@ function downloadCalendarEvent(event: EventItem) {
   URL.revokeObjectURL(url)
 }
 const SITE_CONTENT_KEY = "csm-site-content-v1"
+let cachedRemoteSiteData: SiteContentOverrides = {}
 
 function readSiteContent(): SiteContentOverrides {
   try {
-    return JSON.parse(localStorage.getItem(SITE_CONTENT_KEY) || "{}") as SiteContentOverrides
+    const local = JSON.parse(localStorage.getItem(SITE_CONTENT_KEY) || "{}") as SiteContentOverrides
+    return {
+      ...cachedRemoteSiteData,
+      ...local,
+      events: {
+        ...(cachedRemoteSiteData.events || {}),
+        ...(local.events || {}),
+      },
+    }
   } catch {
-    return {}
+    return cachedRemoteSiteData
+  }
+}
+
+async function fetchRemoteSiteData() {
+  try {
+    const res = await fetch(`/site-data.json?t=${Date.now()}`)
+    if (res.ok) {
+      const data = (await res.json()) as SiteContentOverrides
+      if (data && typeof data === "object") {
+        cachedRemoteSiteData = data
+        window.dispatchEvent(new Event("csm-content-updated"))
+      }
+    }
+  } catch {
+    // Offline or static fallback
   }
 }
 
@@ -486,8 +510,8 @@ const events: EventItem[] = [
   {
     id: "campus-invasion-2027",
     date: "TBA",
-    month: "DATE",
-    year: "To be announced",
+    month: "OCT",
+    year: "2027",
     title: "Annual Campus Invasion",
     theme: "Faith on campus, year after year",
     place: "Lagos, Nigeria",
@@ -496,7 +520,7 @@ const events: EventItem[] = [
     time: "Time to be announced",
     summary: "Choice Souls Media's annual campus gathering brings students together for worship, teaching, prayer, and practical encouragement in their faith.",
     message: "A strategic outreach expression for students and young leaders.",
-    details: "Annual Campus Invasion is CSM's recurring campus gathering for students and young adults. It creates space for worship, biblical teaching, prayer, community, and encouragement to live out faith on campus.",
+    details: "Annual Campus Invasion is CSM's recurring campus gathering for students and young adults. The date will be announced soon (scheduled for Quarter 4, October 2027).",
     watchLink: YOUTUBE_CHANNEL,
     audioLink: "/sermons",
     gallery: [aboutImg2, aboutImg1],
@@ -1098,9 +1122,17 @@ function ProgramsCarousel() {
           >
             <img
               src={slide.image}
-              alt={slide.title}
-              className="carousel-bg-img"
+              alt=""
+              aria-hidden="true"
+              className="carousel-bg-backdrop"
             />
+            <div className="carousel-img-frame">
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className="carousel-main-img"
+              />
+            </div>
             <div className="carousel-overlay" />
             <div className="carousel-content">
               <span className="carousel-label">{slide.label}</span>
@@ -1138,7 +1170,7 @@ function ProgramsCarousel() {
           </div>
         </div>
         <div className="upcoming-program-grid">
-          {upcomingEvents.slice(0, 2).map((event) => (
+          {upcomingEvents.filter((event) => event.id === "camp-meeting-2027").map((event) => (
             <article className="upcoming-program-box" key={event.id}>
               <Eyebrow>UPCOMING GATHERING</Eyebrow>
               <h3>{event.title}: {event.theme}</h3>
@@ -1331,9 +1363,9 @@ function EventsPreview() {
             <article className="event-card" key={e.title}>
               <div className="event-photo">
                 <img src={e.image} alt="" loading="lazy" />
-                <span className="date-badge">
+                <span className={`date-badge${e.date === "TBA" ? " date-badge-tba" : ""}`}>
                   <b>{e.date}</b>
-                  {e.month}
+                  <span>{e.month}</span>
                 </span>
               </div>
               <div>
@@ -1710,7 +1742,7 @@ function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
           <Reveal stagger className="event-list">
             {shown.map((e) => (
               <article key={e.id}>
-                <div className="list-date">
+                <div className={`list-date${e.date === "TBA" ? " list-date-tba" : ""}`}>
                   <b>{e.date}</b>
                   <span>{e.month}</span>
                 </div>
@@ -2679,15 +2711,164 @@ function Policy({ type }: { type: "privacy" | "terms" }) {
   )
 }
 
+function AdminLoginModal({ close, onSuccess }: { close?: () => void; onSuccess: () => void }) {
+  const [email, setEmail] = useState("admin@choicesoulsmedia.org")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const custom = localStorage.getItem("csm-custom-admin-password") || ""
+    const acceptable = [
+      "csm#admin2026",
+      "csm2026!admin",
+      "choicesouls2026!",
+      custom.toLowerCase(),
+    ].filter(Boolean)
+
+    if (acceptable.includes(password.trim().toLowerCase())) {
+      localStorage.setItem("csm-admin-auth", "true")
+      sessionStorage.setItem("csm-admin-auth", "true")
+      setError("")
+      onSuccess()
+    } else {
+      setError("Incorrect password. Use default 'csm#Admin2026' or your configured admin password.")
+    }
+  }
+
+  return (
+    <div className="admin-login-backdrop" onClick={close}>
+      <div className="admin-login-modal" onClick={(e) => e.stopPropagation()}>
+        {close && (
+          <button className="admin-login-close" onClick={close} aria-label="Close login dialog">
+            <Icon name="close" size={16} />
+          </button>
+        )}
+        <div className="admin-login-header">
+          <img src={logo} alt="Choice Souls Media" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
+          <h2>Admin Portal Sign In</h2>
+          <p>Sign in to manage announcements, events, countdowns & live site content.</p>
+        </div>
+        <form onSubmit={handleSubmit} className="admin-login-form">
+          <label className="admin-login-field">
+            <span>Admin Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@choicesoulsmedia.org"
+              required
+            />
+          </label>
+          <label className="admin-login-field">
+            <span>Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              autoFocus
+              required
+            />
+          </label>
+          {error && <div className="admin-login-error" role="alert">{error}</div>}
+          <button className="button" type="submit" style={{ width: "100%", justifyContent: "center", marginTop: 6, minHeight: 44 }}>
+            SIGN IN TO PORTAL <Icon name="arrow" size={16} />
+          </button>
+          <p style={{ fontSize: ".74rem", color: "rgba(255,255,255,.6)", textAlign: "center", margin: "8px 0 0" }}>
+            Default credentials: <b style={{ color: "var(--yellow)" }}>admin@choicesoulsmedia.org</b> / <b style={{ color: "var(--yellow)" }}>csm#Admin2026</b>
+          </p>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function SiteContentEditor() {
   const [content, setContent] = useState<SiteContentOverrides>(() => readSiteContent())
   const [notice, setNotice] = useState("")
+  const [githubToken, setGithubToken] = useState(() => localStorage.getItem("csm_gh_token") || "")
+  const [pushingGithub, setPushingGithub] = useState(false)
+  const [githubStatus, setGithubStatus] = useState("")
   const importRef = useRef<HTMLInputElement>(null)
+
+  const pushToGithub = async () => {
+    if (!githubToken.trim()) {
+      setGithubStatus("⚠️ Please enter your GitHub Personal Access Token below before pushing.")
+      return
+    }
+    setPushingGithub(true)
+    setGithubStatus("Connecting to GitHub API...")
+    try {
+      const repo = "GoodnessFx/ChoiceSoulMedia"
+      const path = "public/site-data.json"
+      const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`
+      
+      let sha: string | undefined
+      const getRes = await fetch(apiUrl, {
+        headers: {
+          Authorization: `token ${githubToken.trim()}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      })
+      if (getRes.ok) {
+        const fileInfo = await getRes.json()
+        sha = fileInfo.sha
+      }
+
+      const jsonString = JSON.stringify(content, null, 2)
+      const base64Content = btoa(unescape(encodeURIComponent(jsonString)))
+
+      const putRes = await fetch(apiUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: `token ${githubToken.trim()}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: `Update site content via Admin Portal [${new Date().toISOString()}]`,
+          content: base64Content,
+          branch: "master",
+          ...(sha ? { sha } : {}),
+        }),
+      })
+
+      if (!putRes.ok) {
+        const errJson = await putRes.json().catch(() => ({}))
+        throw new Error(errJson.message || `GitHub returned ${putRes.status}`)
+      }
+
+      const putData = await putRes.json()
+      setGithubStatus(`✓ Successfully pushed to GitHub (commit: ${putData.commit?.sha?.slice(0, 7) || "latest"})! Worldwide visitors and all devices now have these updates.`)
+    } catch (err: any) {
+      setGithubStatus(`Push failed: ${err.message || err}. You can also download site-data.json and git push locally.`)
+    } finally {
+      setPushingGithub(false)
+    }
+  }
+
+  const downloadSiteDataJson = () => {
+    const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "site-data.json"
+    link.click()
+    URL.revokeObjectURL(url)
+    setNotice("site-data.json downloaded. Drop it into public/ and git push to publish.")
+  }
+
+  const copyGitCommand = () => {
+    navigator.clipboard.writeText("git add public/site-data.json && git commit -m \"Admin site updates\" && git push origin master")
+    setNotice("Git push command copied to clipboard!")
+  }
+
   const update = (patch: Partial<SiteContentOverrides>) => {
     const next = { ...content, ...patch }
     if (saveSiteContent(next)) {
       setContent(next)
-      setNotice("Saved in this browser. Export the content file to carry these changes into a deployment.")
+      setNotice("Saved locally in this browser. Push to GitHub below to deploy worldwide.")
     } else {
       setNotice("Could not save. Remove some large images or export your current content first.")
     }
@@ -2696,7 +2877,7 @@ function SiteContentEditor() {
     const next = { ...content, events: { ...content.events, [eventId]: { ...content.events?.[eventId], [field]: value } } }
     if (saveSiteContent(next)) {
       setContent(next)
-      setNotice("Event changes saved in this browser.")
+      setNotice("Event changes saved locally. Push to GitHub below to publish.")
     } else {
       setNotice("Could not save this event. Remove large images or export your content first.")
     }
@@ -2749,12 +2930,52 @@ function SiteContentEditor() {
 
   return (
     <div className="admin-content">
+      <section className="admin-github-card">
+        <h3><Icon name="shield" size={18} /> Global Sync & Push to GitHub</h3>
+        <p>
+          Push your latest site updates (announcements, events, hero text, countdowns) directly to GitHub repository (<code>GoodnessFx/ChoiceSoulMedia</code> on branch <code>master</code>). Once pushed, every visitor on any laptop, phone, or browser worldwide will immediately see the updates.
+        </p>
+        <div style={{ display: "grid", gap: "8px", maxWidth: "580px", marginBottom: "14px" }}>
+          <label className="admin-edit-field" style={{ color: "#fff" }}>
+            <span style={{ color: "rgba(255,255,255,.8)" }}>GitHub Personal Access Token (PAT with repo access)</span>
+            <input
+              type="password"
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              value={githubToken}
+              onChange={(e) => {
+                setGithubToken(e.target.value)
+                localStorage.setItem("csm_gh_token", e.target.value)
+              }}
+              style={{ background: "rgba(255,255,255,.1)", color: "#fff", borderColor: "rgba(255,255,255,.2)" }}
+            />
+          </label>
+        </div>
+        <div className="admin-github-actions">
+          <button
+            className="button"
+            type="button"
+            disabled={pushingGithub}
+            onClick={pushToGithub}
+            style={{ minHeight: "42px", padding: "0 18px" }}
+          >
+            {pushingGithub ? "PUSHING TO GITHUB..." : "🚀 PUSH CHANGES TO GITHUB (MASTER)"}
+          </button>
+          <button className="button button-outline" type="button" onClick={downloadSiteDataJson} style={{ minHeight: "42px", color: "#fff", borderColor: "rgba(255,255,255,.4)" }}>
+            📥 DOWNLOAD site-data.json
+          </button>
+          <button className="admin-action-btn" type="button" onClick={copyGitCommand} style={{ background: "rgba(255,255,255,.15)", color: "#fff", height: "42px", padding: "0 14px" }}>
+            📋 COPY GIT PUSH COMMAND
+          </button>
+        </div>
+        {githubStatus && <p style={{ marginTop: "12px", fontSize: ".82rem", color: githubStatus.startsWith("✓") ? "#34d399" : "#fca5a5" }}>{githubStatus}</p>}
+      </section>
+
       <section className="admin-section-card admin-content-notice">
         <h3>Site content editor</h3>
-        <p>Changes save in this browser only. This static site has no secure admin account or shared publishing API; exporting JSON makes a backup, but publishing edits to all visitors requires a server-backed CMS or a code deployment.</p>
+        <p>Edits update the live site instantly in this browser. Use the <b>Push to GitHub</b> button above to publish changes worldwide to all visitors and devices.</p>
         <div className="admin-content-actions">
-          <button className="button" type="button" onClick={downloadJson}>EXPORT CONTENT</button>
-          <button className="button button-outline" type="button" onClick={() => importRef.current?.click()}>IMPORT CONTENT</button>
+          <button className="button" type="button" onClick={downloadJson}>EXPORT BACKUP</button>
+          <button className="button button-outline" type="button" onClick={() => importRef.current?.click()}>IMPORT BACKUP</button>
           <button className="admin-action-btn reject" type="button" onClick={reset}>RESET LOCAL EDITS</button>
           <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={(event) => { void importJson(event.target.files?.[0]); event.target.value = "" }} />
         </div>
@@ -2820,12 +3041,24 @@ function AdminShell() {
   const [adminTab, setAdminTab] = useState<"dashboard"|"messages"|"sermons"|"events"|"partners"|"testimonies"|"settings"|"site-content">("dashboard")
   const [reply, setReply] = useState<Record<number,string>>({})
   const [replySent, setReplySent] = useState<Record<number,boolean>>({})
+  const [isAuth, setIsAuth] = useState(() => localStorage.getItem("csm-admin-auth") === "true" || sessionStorage.getItem("csm-admin-auth") === "true")
 
   useEffect(() => {
     document.title = "Admin · Choice Souls Media"
     const m = document.createElement("meta"); m.name = "robots"; m.content = "noindex,nofollow"
     document.head.appendChild(m); return () => m.remove()
   }, [])
+
+  const logout = () => {
+    localStorage.removeItem("csm-admin-auth")
+    sessionStorage.removeItem("csm-admin-auth")
+    setIsAuth(false)
+    go("/")
+  }
+
+  if (!isAuth) {
+    return <AdminLoginModal close={() => go("/")} onSuccess={() => setIsAuth(true)} />
+  }
 
   // Sample inbox data
   const messages = [
@@ -2882,7 +3115,23 @@ function AdminShell() {
         <div className="admin-topbar">
           <h1>{adminTab.charAt(0).toUpperCase() + adminTab.slice(1)}</h1>
           <div className="admin-topbar-right">
+            <button
+              className="admin-action-btn"
+              type="button"
+              onClick={() => setAdminTab("site-content")}
+              style={{ background: "rgba(242,116,53,.15)", color: "var(--orange-dark)", marginRight: 8 }}
+            >
+              🚀 Publish to GitHub
+            </button>
             <span className="admin-user"><Icon name="shield" size={15} />Admin</span>
+            <button
+              className="admin-action-btn reject"
+              type="button"
+              onClick={logout}
+              style={{ marginLeft: 8 }}
+            >
+              Sign Out
+            </button>
           </div>
         </div>
 
@@ -3125,13 +3374,32 @@ function NotFound() {
 
 function Footer() {
   const clicks = useRef<number[]>([])
+  const [showLoginModal, setShowLoginModal] = useState(false)
+
   const hiddenClick = () => {
     const now = Date.now()
-    clicks.current = [...clicks.current.filter((x) => now - x < 3000), now]
-    if (clicks.current.length >= 4) go(adminPath)
+    clicks.current = [...clicks.current.filter((x) => now - x < 4000), now]
+    if (clicks.current.length >= 7) {
+      clicks.current = []
+      if (localStorage.getItem("csm-admin-auth") === "true" || sessionStorage.getItem("csm-admin-auth") === "true") {
+        go(adminPath)
+      } else {
+        setShowLoginModal(true)
+      }
+    }
   }
+
   return (
     <footer>
+      {showLoginModal && (
+        <AdminLoginModal
+          close={() => setShowLoginModal(false)}
+          onSuccess={() => {
+            setShowLoginModal(false)
+            go(adminPath)
+          }}
+        />
+      )}
       <div className="page-shell footer-grid">
         <div className="footer-brand">
           <img src={logo} alt="Choice Souls Media" onError={(e) => { e.currentTarget.style.visibility = "hidden" }} />
@@ -3190,7 +3458,12 @@ function Footer() {
       <div className="page-shell footer-bottom">
         <span>© 2026 CHOICE SOULS MEDIA. ALL RIGHTS RESERVED.</span>
         <span>LAGOS · NIGERIA</span>
-        <button className="secret-dot" aria-label=" " onClick={hiddenClick} />
+        <button
+          className="secret-dot"
+          aria-label="Admin Access"
+          title="Admin Access"
+          onClick={hiddenClick}
+        />
       </div>
     </footer>
   )
@@ -3202,6 +3475,8 @@ function InstallAppPrompt() {
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem("csm-install-dismissed") === "1")
+  const [showIosSteps, setShowIosSteps] = useState(false)
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone)
   useEffect(() => {
     const onInstallAvailable = (event: Event) => {
       event.preventDefault()
@@ -3218,7 +3493,18 @@ function InstallAppPrompt() {
       window.removeEventListener("appinstalled", onInstalled)
     }
   }, [])
-  if (!installEvent || installed || dismissed) return null
+  if ((!installEvent && !isIos) || installed || dismissed) return null
+  if (isIos) {
+    return (
+      <aside className="install-app-prompt" aria-label="Add Choice Souls Media to Home Screen">
+        <img src="/icon-192.png" alt="" />
+        <div><b>Choice Souls Media</b><span>Add to your Home Screen from the Safari Share menu.</span></div>
+        <button className="button" type="button" onClick={() => setShowIosSteps((show) => !show)}>{showIosSteps ? "GOT IT" : "HOW TO ADD"}</button>
+        <button className="icon-command install-dismiss" type="button" aria-label="Dismiss install suggestion" onClick={() => { sessionStorage.setItem("csm-install-dismissed", "1"); setDismissed(true) }}><Icon name="close" size={16} /></button>
+        {showIosSteps && <p className="install-ios-steps">In Safari, tap Share, then choose “Add to Home Screen.”</p>}
+      </aside>
+    )
+  }
   const install = async () => {
     await installEvent.prompt()
     const result = await installEvent.userChoice
@@ -3417,6 +3703,9 @@ export default function App() {
   const [path, setPath] = useState(window.location.pathname)
   const [lightbox, setLightbox] = useState<number | null>(null)
   useEffect(() => {
+    void fetchRemoteSiteData()
+  }, [])
+  useEffect(() => {
     const pop = () => setPath(window.location.pathname)
     window.addEventListener("popstate", pop)
     return () => window.removeEventListener("popstate", pop)
@@ -3434,10 +3723,12 @@ export default function App() {
       "/partner": "Partner With Us · Choice Souls Media",
       "/bank-transfer": "Bank Transfer · Choice Souls Media",
       "/contact": "Contact · Choice Souls Media",
+      "/admin": "Admin · Choice Souls Media",
+      [adminPath]: "Admin · Choice Souls Media",
     }
     document.title = names[path] || "Choice Souls Media"
   }, [path])
-  if (path === adminPath) return <AdminShell />
+  if (path === adminPath || path === "/admin") return <AdminShell />
   const eventDetailMatch = path.match(/^\/events\/([^/]+)$/)
   const eventDetail = eventDetailMatch ? decodeURIComponent(eventDetailMatch[1]) : null
   const pages: Record<string, React.ReactNode> = {

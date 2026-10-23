@@ -1,0 +1,44 @@
+{
+  "updatedAt": "2026-10-23T14:00:00Z",
+  "heroTitle": "Raising souls for God's Kingdom.",
+  "heroDescription": "Choice Souls Media is a global interdenominational network of believers and ministries committed to raising a generation that takes God's word to the nations.",
+  "heroImages": [],
+  "events": {
+    "sent-summit-2026": {
+      "title": "Sent Summit",
+      "theme": "Marketplace Altars",
+      "date": "15",
+      "month": "NOV",
+      "year": "2026",
+      "time": "3:00 PM",
+      "place": "Radisson Blu, Ozumba Mbadiwe, Victoria Island, Lagos",
+      "summary": "A focused apostolic gathering for believers carrying kingdom influence into the marketplace.",
+      "message": "Engaging your priesthood in the workplace.",
+      "details": "Sent Summit is the next major public gathering on the site right now. It is positioned as a sharp, practical room for kingdom-minded professionals, founders, creatives, and believers who want their work to reflect the agenda of God."
+    },
+    "camp-meeting-2027": {
+      "title": "Kingdomcentric Camp Meeting",
+      "theme": "Kingdomcentric",
+      "date": "24",
+      "month": "AUG",
+      "year": "2027",
+      "time": "6:00 PM",
+      "place": "Capstone Resource Centre, Lagos",
+      "summary": "The next camp meeting gathering, built for deep consecration, teaching, prayer, and kingdom alignment.",
+      "message": "The next camp meeting countdown now points to 24 August 2027 at 6 PM.",
+      "details": "This is the larger annual gathering on the site, separate from Sent Summit. It is positioned as the broader camp meeting experience for the Choice Souls Media community."
+    },
+    "campus-invasion-2027": {
+      "title": "Annual Campus Invasion",
+      "theme": "Faith on campus, year after year",
+      "date": "TBA",
+      "month": "OCT",
+      "year": "2027",
+      "time": "Time to be announced",
+      "place": "Lagos, Nigeria",
+      "summary": "Choice Souls Media's annual campus gathering brings students together for worship, teaching, prayer, and practical encouragement in their faith.",
+      "message": "A strategic outreach expression for students and young leaders.",
+      "details": "Annual Campus Invasion is CSM's recurring campus gathering for students and young adults. Date to be announced (scheduled for Quarter 4, October 2027)."
+    }
+  }
+}
