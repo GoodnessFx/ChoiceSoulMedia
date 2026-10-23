@@ -1348,7 +1348,6 @@ function About() {
           </div>
           <div className="founder-img-secondary">
             <img src={aboutImg2} alt="Choice Souls Media ministry" onError={(e) => { e.currentTarget.style.opacity = "0" }} />
-            <span className="profile-label">SINCE 2002</span>
           </div>
         </div>
         <Reveal>
