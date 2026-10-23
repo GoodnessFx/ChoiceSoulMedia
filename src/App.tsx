@@ -1088,7 +1088,7 @@ function Countdown({ targetDate = "2027-08-24T18:00:00" }: { targetDate?: string
 // Programs and Announcements carousel
 function ProgramsCarousel() {
   const [current, setCurrent] = useState(0)
-  const upcomingEvents = getSiteEvents().filter((event) => event.type === "Upcoming")
+  const upcomingEvents = getSiteEvents().filter((event) => event.type === "Upcoming" && event.id === "camp-meeting-2027")
   const pastSlides = programSlides.filter((slide) => slide.label.startsWith("PAST EVENT"))
   const total = upcomingEvents.length + pastSlides.length
 
