@@ -65,6 +65,31 @@ const WHATSAPP_LINK = "https://wa.me/2348172013060"
 const SENT_SUMMIT_REGISTRATION = "https://tinyurl.com/sentsummit"
 const SENT_SUMMIT_MAP = "https://www.google.com/maps/search/?api=1&query=Radisson+Blu+Anchorage+Hotel,+Ozumba+Mbadiwe,+Victoria+Island,+Lagos"
 const CAMP_MEETING_MAP = "https://www.google.com/maps/search/?api=1&query=25+McEwen+Street,+Alagomeji,+Lagos"
+const calendarLink = (event: EventItem) => {
+  if (!event.targetDate) return null
+  const start = new Date(event.targetDate)
+  if (Number.isNaN(start.getTime())) return null
+  const end = new Date(start.getTime() + 90 * 60 * 1000)
+  const formatUtc = (date: Date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")
+  const query = new URLSearchParams({ action: "TEMPLATE", text: `${event.title}: ${event.theme}`, dates: `${formatUtc(start)}/${formatUtc(end)}`, details: `${event.summary}\n${event.message}`, location: event.place })
+  return `https://calendar.google.com/calendar/render?${query.toString()}`
+}
+
+function downloadCalendarEvent(event: EventItem) {
+  if (!event.targetDate) return
+  const start = new Date(event.targetDate)
+  if (Number.isNaN(start.getTime())) return
+  const end = new Date(start.getTime() + 90 * 60 * 1000)
+  const formatDate = (date: Date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")
+  const escape = (value: string) => value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;")
+  const body = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Choice Souls Media//Events//EN", "BEGIN:VEVENT", `UID:${event.id}@choicesoulsmedia`, `DTSTAMP:${formatDate(new Date())}`, `DTSTART:${formatDate(start)}`, `DTEND:${formatDate(end)}`, `SUMMARY:${escape(`${event.title}: ${event.theme}`)}`, `DESCRIPTION:${escape(`${event.summary} ${event.message}`)}`, `LOCATION:${escape(event.place)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n")
+  const url = URL.createObjectURL(new Blob([body], { type: "text/calendar;charset=utf-8" }))
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = `${event.id}.ics`
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
 const SITE_CONTENT_KEY = "csm-site-content-v1"
 
 function readSiteContent(): SiteContentOverrides {
@@ -431,7 +456,7 @@ const events: EventItem[] = [
     summary: "A focused apostolic gathering for believers carrying kingdom influence into the marketplace.",
     message: "Engaging your priesthood in the workplace.",
     details: "Sent Summit is the next major public gathering on the site right now. It is positioned as a sharp, practical room for kingdom-minded professionals, founders, creatives, and believers who want their work to reflect the agenda of God.",
-    targetDate: "2026-11-15T15:00:00",
+    targetDate: "2026-11-15T15:00:00+01:00",
     registrationLink: SENT_SUMMIT_REGISTRATION,
     locationLink: SENT_SUMMIT_MAP,
     watchLink: YOUTUBE_CHANNEL,
@@ -452,7 +477,7 @@ const events: EventItem[] = [
     summary: "The next camp meeting gathering, built for deep consecration, teaching, prayer, and kingdom alignment.",
     message: "The next camp meeting countdown now points to 24 August 2027 at 6 PM.",
     details: "This is the larger annual gathering on the site, separate from Sent Summit. It is positioned as the broader camp meeting experience for the Choice Souls Media community.",
-    targetDate: "2027-08-24T18:00:00",
+    targetDate: "2027-08-24T18:00:00+01:00",
     locationLink: CAMP_MEETING_MAP,
     watchLink: YOUTUBE_CHANNEL,
     audioLink: "/sermons",
@@ -460,18 +485,18 @@ const events: EventItem[] = [
   },
   {
     id: "campus-invasion-2027",
-    date: "07",
-    month: "MAR",
-    year: "2027",
-    title: "Campus Invasion",
-    theme: "Revival on Campus",
+    date: "TBA",
+    month: "DATE",
+    year: "To be announced",
+    title: "Annual Campus Invasion",
+    theme: "Faith on campus, year after year",
     place: "Lagos, Nigeria",
     type: "Upcoming",
     image: aboutImg2,
-    time: "4:00 PM",
-    summary: "A campus-focused activation gathering designed to stir conviction, courage, and witness among students.",
+    time: "Time to be announced",
+    summary: "Choice Souls Media's annual campus gathering brings students together for worship, teaching, prayer, and practical encouragement in their faith.",
     message: "A strategic outreach expression for students and young leaders.",
-    details: "Campus Invasion sits in the event mix as one of the outreach-focused expressions of the ministry. It is built for prayer, teaching, and direct engagement with students.",
+    details: "Annual Campus Invasion is CSM's recurring campus gathering for students and young adults. It creates space for worship, biblical teaching, prayer, community, and encouragement to live out faith on campus.",
     watchLink: YOUTUBE_CHANNEL,
     audioLink: "/sermons",
     gallery: [aboutImg2, aboutImg1],
@@ -1039,14 +1064,26 @@ function Countdown({ targetDate = "2027-08-24T18:00:00" }: { targetDate?: string
 // Programs and Announcements carousel
 function ProgramsCarousel() {
   const [current, setCurrent] = useState(0)
-  const total = programSlides.length
+  const upcomingEvents = getSiteEvents().filter((event) => event.type === "Upcoming")
+  const pastSlides = programSlides.filter((slide) => slide.label.startsWith("PAST EVENT"))
+  const total = upcomingEvents.length + pastSlides.length
 
   useEffect(() => {
     const id = setInterval(() => setCurrent((c) => (c + 1) % total), 5000)
     return () => clearInterval(id)
   }, [total])
 
-  const slide = programSlides[current]
+  const slide = current < upcomingEvents.length
+    ? {
+      id: current + 100,
+      label: `UPCOMING — ${upcomingEvents[current].title.toUpperCase()}`,
+      title: upcomingEvents[current].theme,
+      subtitle: upcomingEvents[current].message,
+      dates: `${upcomingEvents[current].date} ${upcomingEvents[current].month} ${upcomingEvents[current].year} · ${upcomingEvents[current].time}`,
+      location: upcomingEvents[current].place,
+      image: upcomingEvents[current].image,
+    }
+    : pastSlides[current - upcomingEvents.length]
 
   return (
     <section className="programs-section section">
@@ -1089,7 +1126,7 @@ function ProgramsCarousel() {
               <Icon name="chevronRight" size={22} />
             </button>
             <div className="carousel-dots">
-              {programSlides.map((_, i) => (
+              {Array.from({ length: total }, (_, i) => (
                 <button
                   key={i}
                   className={`carousel-dot ${i === current ? "active" : ""}`}
@@ -1100,14 +1137,19 @@ function ProgramsCarousel() {
             </div>
           </div>
         </div>
-        {/* Upcoming Program countdown */}
-        <div className="upcoming-program-box">
-          <div className="upcoming-label">
-            <Eyebrow>UPCOMING PROGRAM</Eyebrow>
-          </div>
-          <h3>ANNUAL CAMP MEETING 2027</h3>
-          <p className="upcoming-sub">August 24, 2027 · 6 PM · Lagos, Nigeria · Kingdomcentric</p>
-          <Countdown targetDate="2027-08-24T18:00:00" />
+        <div className="upcoming-program-grid">
+          {upcomingEvents.slice(0, 2).map((event) => (
+            <article className="upcoming-program-box" key={event.id}>
+              <Eyebrow>UPCOMING GATHERING</Eyebrow>
+              <h3>{event.title}: {event.theme}</h3>
+              <p className="upcoming-sub">{event.date} {event.month} {event.year} · {event.time} · {event.place}</p>
+              {event.targetDate && <Countdown targetDate={event.targetDate} />}
+              <div className="upcoming-program-actions">
+                <Link className="text-link" href={`/events/${event.id}`}>EVENT DETAILS <Icon name="arrow" size={14} /></Link>
+                {event.targetDate && <button className="text-link" type="button" onClick={() => downloadCalendarEvent(event)}><Icon name="calendar" size={14} /> SAVE DATE</button>}
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -1277,8 +1319,8 @@ function EventsPreview() {
       <div className="page-shell">
         <div className="heading-row">
           <SectionHeading
-            eyebrow="Recent experiences"
-            title="Energy you can feel."
+            eyebrow="Gather as one church"
+            title="Worship, teaching, and community."
           />
           <Link href="/events" className="text-link">
             VIEW ALL EVENTS <Icon name="arrow" size={17} />
@@ -1300,7 +1342,7 @@ function EventsPreview() {
                   {e.place}
                 </span>
                 <h3>{e.title}</h3>
-                <Link href="/events">
+                <Link href={`/events/${e.id}`}>
                   VIEW EXPERIENCE <Icon name="arrow" size={15} />
                 </Link>
               </div>
@@ -1597,7 +1639,6 @@ function ServicesPage() {
 
 function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
   const [filter, setFilter] = useState("All")
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [siteEvents, setSiteEvents] = useState(() => getSiteEvents())
   useEffect(() => {
     const update = () => setSiteEvents(getSiteEvents())
@@ -1614,8 +1655,8 @@ function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
     <main id="main">
       <PageHero
         eyebrow="Gather with intention"
-        title="Experiences designed to move you."
-        text="From intimate circles to landmark summits, every CSM gathering is created to spark clarity, connection, and action."
+        title="Gather in worship, teaching, and fellowship."
+        text="Explore CSM's annual gatherings, campus ministry, and prayer meetings. Open an event for its schedule, venue, registration, calendar, and verified recordings."
       />
       <section className="featured-event page-shell">
         <div className="featured-image">
@@ -1633,14 +1674,17 @@ function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
             </span>
             <span>{featured.date} {featured.month} {featured.year} · {featured.time}</span>
           </div>
-          <Countdown targetDate={featured.targetDate} />
+          {featured.targetDate && <Countdown targetDate={featured.targetDate} />}
           <div className="event-actions">
             <a href={featured.registrationLink} className="button" target="_blank" rel="noreferrer">
               REGISTER <Icon name="arrow" size={17} />
             </a>
             <a href={featured.locationLink} className="text-link" target="_blank" rel="noreferrer">
-              OPEN IN GOOGLE MAPS <Icon name="pin" size={15} />
+              <Icon name="pin" size={15} /> DIRECTIONS
             </a>
+            <button type="button" className="text-link" onClick={() => downloadCalendarEvent(featured)}><Icon name="calendar" size={15} /> ADD TO CALENDAR</button>
+            {calendarLink(featured) && <a href={calendarLink(featured)!} className="text-link" target="_blank" rel="noreferrer"><Icon name="calendar" size={15} /> GOOGLE CALENDAR</a>}
+            <Link href={`/events/${featured.id}`} className="text-link">EVENT DETAILS <Icon name="arrow" size={15} /></Link>
           </div>
         </div>
       </section>
@@ -1649,7 +1693,7 @@ function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
           <div className="filter-row">
             <div>
               <Eyebrow>Event calendar</Eyebrow>
-              <h2>Find your next room.</h2>
+              <h2>Find your next gathering.</h2>
             </div>
             <div className="filters">
               {["All", "Upcoming", "Past"].map((f) => (
@@ -1665,7 +1709,7 @@ function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
           </div>
           <Reveal stagger className="event-list">
             {shown.map((e) => (
-              <article key={e.title}>
+              <article key={e.id}>
                 <div className="list-date">
                   <b>{e.date}</b>
                   <span>{e.month}</span>
@@ -1678,40 +1722,107 @@ function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
                   </p>
                 </div>
                 <p>{e.summary}</p>
-                <button
-                  type="button"
-                  className="round-arrow"
-                  aria-label={`${expandedId === e.id ? "Hide" : "Show"} details for ${e.title}`}
-                  aria-expanded={expandedId === e.id}
-                  onClick={() => setExpandedId(expandedId === e.id ? null : e.id)}
-                >
-                  <Icon name={expandedId === e.id ? "close" : "arrow"} />
-                </button>
-                {expandedId === e.id && (
-                  <div className="event-details">
-                    <p>{e.details}</p>
-                    {e.type === "Upcoming" && e.targetDate && <Countdown targetDate={e.targetDate} />}
-                    <div className="event-detail-links">
-                      {e.registrationLink && <a href={e.registrationLink} target="_blank" rel="noreferrer">Register</a>}
-                      {e.locationLink && <a href={e.locationLink} target="_blank" rel="noreferrer">Google Maps</a>}
-                      {e.watchLink && <a href={e.watchLink} target="_blank" rel="noreferrer">Watch messages</a>}
-                      {e.audioLink && <Link href={e.audioLink}>Audio and sermons</Link>}
-                    </div>
-                    <div className="event-detail-gallery">
-                      {e.gallery.map((image, index) => (
-                        <button key={`${image}-${index}`} type="button" onClick={() => openLightbox(lightboxPhotos.indexOf(image))} aria-label={`View ${e.title} image ${index + 1}`}>
-                          <img src={image} alt={`${e.title} media ${index + 1}`} loading="lazy" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <Link href={`/events/${e.id}`} className="round-arrow" aria-label={`Open ${e.title} details`}>
+                  <Icon name="arrow" />
+                </Link>
               </article>
             ))}
           </Reveal>
         </div>
       </section>
       <PartnerBand />
+    </main>
+  )
+}
+
+function EventDetailPage({ eventId, openLightbox }: { eventId: string; openLightbox: (n: number) => void }) {
+  const [siteEvents, setSiteEvents] = useState(() => getSiteEvents())
+  useEffect(() => {
+    const update = () => setSiteEvents(getSiteEvents())
+    window.addEventListener("csm-content-updated", update)
+    window.addEventListener("storage", update)
+    return () => {
+      window.removeEventListener("csm-content-updated", update)
+      window.removeEventListener("storage", update)
+    }
+  }, [])
+  const event = siteEvents.find((item) => item.id === eventId)
+  if (!event) return <NotFound />
+  const recordings = event.id === "go-2026" || event.id === "camp-meeting-2027"
+    ? sermons.filter((sermon) => sermon.year === "2026")
+    : event.id === "apostolos-2025"
+      ? sermons.filter((sermon) => sermon.year === "2025")
+      : []
+  const media = event.id === "sent-summit-2026" || event.id === "go-2026" || event.id === "apostolos-2025" ? event.gallery : []
+  const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(event.place)}&output=embed`
+  const archiveSearch = `https://www.youtube.com/@ChoiceSouls/search?query=${encodeURIComponent(`${event.title} ${event.year}`)}`
+
+  return (
+    <main id="main" className="event-detail-page">
+      <section className="section page-shell event-detail-hero">
+        <Link href="/events" className="text-link"><Icon name="chevronLeft" size={16} /> ALL EVENTS</Link>
+        <div className="event-detail-heading">
+          <div>
+            <Eyebrow>{event.type === "Upcoming" ? "Upcoming gathering" : `Event archive · ${event.year}`}</Eyebrow>
+            <h1>{event.title}</h1>
+            <p className="event-detail-theme">{event.theme}</p>
+            <p>{event.details}</p>
+          </div>
+          <img src={event.image} alt={`${event.title} event artwork`} />
+        </div>
+        <div className="event-detail-facts">
+          <span><Icon name="calendar" size={17} /> {event.date} {event.month} {event.year} · {event.time}</span>
+          <span><Icon name="pin" size={17} /> {event.place}</span>
+        </div>
+        {event.type === "Upcoming" && event.targetDate && <div className="event-detail-countdown"><Countdown targetDate={event.targetDate} /></div>}
+        <div className="event-actions event-detail-actions">
+          {event.registrationLink && <a className="button" href={event.registrationLink} target="_blank" rel="noreferrer">REGISTER <Icon name="arrow" size={16} /></a>}
+          {event.locationLink && <a className="text-link" href={event.locationLink} target="_blank" rel="noreferrer"><Icon name="pin" size={16} /> GET DIRECTIONS</a>}
+          {event.type === "Upcoming" && event.targetDate && <button className="text-link" type="button" onClick={() => downloadCalendarEvent(event)}><Icon name="calendar" size={16} /> ADD TO CALENDAR (.ICS)</button>}
+          {event.type === "Upcoming" && calendarLink(event) && <a className="text-link" href={calendarLink(event)!} target="_blank" rel="noreferrer"><Icon name="calendar" size={16} /> GOOGLE CALENDAR</a>}
+          <Link className="text-link" href="/contact"><Icon name="mail" size={16} /> CONTACT THE TEAM</Link>
+        </div>
+      </section>
+
+      <section className="section soft">
+        <div className="page-shell event-location-layout">
+          <div>
+            <Eyebrow>Venue</Eyebrow>
+            <h2>Plan your visit.</h2>
+            <p>{event.place}</p>
+            {event.locationLink && <a href={event.locationLink} target="_blank" rel="noreferrer" className="button button-outline"><Icon name="pin" size={16} /> OPEN DIRECTIONS</a>}
+          </div>
+          <iframe title={`Map to ${event.place}`} src={mapsEmbed} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+        </div>
+      </section>
+
+      <section className="section page-shell event-recordings">
+        <SectionHeading
+          eyebrow={event.type === "Past" ? `Verified ${event.year} media` : "Event information"}
+          title={recordings.length ? `${event.year} messages` : event.type === "Past" ? "Explore the official archive." : "Everything you need to attend."}
+          text={recordings.length ? `These recordings are listed under the ${event.year} Choice Souls Media gathering.` : event.type === "Past" ? "We could not verify event-specific recordings or photos for this archive yet. Search the official Choice Souls Media channel for this event." : event.summary}
+        />
+        {recordings.length > 0 ? (
+          <>
+            <div className="event-recording-grid">
+              {recordings.map((sermon) => (
+                <article className="event-recording" key={sermon.id}>
+                  <img src={sermon.thumbnail} alt={`${sermon.title} YouTube thumbnail`} loading="lazy" />
+                  <div><span>{sermon.year} · {sermon.duration}</span><h3>{sermon.title}</h3><p>{sermon.speaker}</p>
+                    <a href={`https://www.youtube.com/watch?v=${sermon.youtubeId}`} target="_blank" rel="noreferrer" className="text-link"><Icon name="youtube" size={15} /> WATCH MESSAGE</a>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <a href={`https://www.youtube.com/@ChoiceSouls/search?query=${encodeURIComponent(event.title + " " + event.year)}`} target="_blank" rel="noreferrer" className="text-link event-year-archive-link"><Icon name="youtube" size={15} /> SEE MORE {event.year} VIDEOS</a>
+          </>
+        ) : event.type === "Past" ? (
+          <a href={archiveSearch} target="_blank" rel="noreferrer" className="button button-outline"><Icon name="search" size={16} /> SEARCH OFFICIAL CHANNEL</a>
+        ) : null}
+        {media.length > 0 && <div className="event-detail-gallery">
+          {media.map((image, index) => <button key={`${image}-${index}`} type="button" onClick={() => openLightbox(Math.max(0, lightboxPhotos.indexOf(image)))} aria-label={`View ${event.title} image ${index + 1}`}><img src={image} alt={`${event.title} media ${index + 1}`} loading="lazy" /></button>)}
+        </div>}
+      </section>
     </main>
   )
 }
@@ -2201,153 +2312,54 @@ function PublicForm({ kind }: { kind: "partner" | "contact" }) {
 
 // Multi-currency donation widget
 function DonationWidget() {
-  const [currency, setCurrency] = useState<"USD" | "NGN" | "GBP" | "EUR" | "GHS">("USD")
-  const [amount, setAmount] = useState("")
-  const [customAmount, setCustomAmount] = useState(false)
-  const [step, setStep] = useState<"amount" | "details" | "success">("amount")
-  const [frequency, setFrequency] = useState<"once" | "monthly">("once")
-
-  const currencySymbols: Record<string, string> = {
-    USD: "$",
-    NGN: "₦",
-    GBP: "£",
-    EUR: "€",
-    GHS: "₵",
-  }
-
-  const presets: Record<string, number[]> = {
-    USD: [10, 25, 50, 100, 250, 500],
-    NGN: [5000, 10000, 25000, 50000, 100000, 250000],
-    GBP: [10, 25, 50, 100, 250, 500],
-    EUR: [10, 25, 50, 100, 250, 500],
-    GHS: [50, 100, 250, 500, 1000, 2500],
-  }
-
-  const sym = currencySymbols[currency]
-
-  if (step === "success") {
-    return (
-      <div className="donation-success">
-        <span className="donation-success-icon">
-          <Icon name="heart" size={32} />
-        </span>
-        <h3>Thank you for your generosity!</h3>
-        <p>
-          Your donation will be processed once the payment gateway is connected.
-          We are grateful for your partnership in this mission.
-        </p>
-        <button className="button" onClick={() => { setStep("amount"); setAmount(""); setCustomAmount(false) }}>
-          MAKE ANOTHER GIFT <Icon name="arrow" size={16} />
-        </button>
-      </div>
-    )
-  }
-
-  if (step === "details") {
-    return (
-      <form
-        className="contact-form donation-form"
-        onSubmit={(e) => { e.preventDefault(); setStep("success") }}
-      >
-        <div className="donation-summary">
-          <span>
-            {frequency === "monthly" ? "Monthly" : "One-time"} gift: <b>{sym}{amount}</b>
-          </span>
-          <button type="button" className="text-link" onClick={() => setStep("amount")}>
-            Change
-          </button>
-        </div>
-        <div className="form-grid">
-          <FormField label="First name" name="fname" placeholder="First name" />
-          <FormField label="Last name" name="lname" placeholder="Last name" />
-          <FormField label="Email address" name="email" type="email" placeholder="you@example.com" />
-          <FormField label="Phone (optional)" name="phone" type="tel" placeholder="+234 or +1..." required={false} />
-        </div>
-        <label>
-          <span>Dedication (optional)</span>
-          <input name="dedication" type="text" placeholder="In honor of / In memory of..." />
-        </label>
-        <div className="donation-note">
-          <Icon name="shield" size={15} />
-          <span>Payments are processed securely. Connect Stripe / Paystack / Flutterwave to activate.</span>
-        </div>
-        <button className="button" type="submit" style={{ width: "100%" }}>
-          COMPLETE DONATION <Icon name="arrow" size={17} />
-        </button>
-      </form>
-    )
-  }
-
   return (
-    <div className="donation-widget">
-      <div className="donation-frequency">
-        {(["once", "monthly"] as const).map((f) => (
-          <button
-            key={f}
-            className={frequency === f ? "active" : ""}
-            onClick={() => setFrequency(f)}
-          >
-            {f === "once" ? "Give Once" : "Give Monthly"}
-          </button>
-        ))}
-      </div>
-      <div className="currency-selector">
-        <label htmlFor="donation-currency">Currency</label>
-        <div className="currency-flags">
-          {(["USD", "NGN", "GBP", "EUR", "GHS"] as const).map((c) => (
-            <button
-              key={c}
-              className={currency === c ? "active" : ""}
-              onClick={() => { setCurrency(c); setAmount(""); setCustomAmount(false) }}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
-      <p className="donation-label">Select an amount ({currency})</p>
-      <div className="donation-presets">
-        {presets[currency].map((p) => (
-          <button
-            key={p}
-            className={amount === String(p) && !customAmount ? "active" : ""}
-            onClick={() => { setAmount(String(p)); setCustomAmount(false) }}
-          >
-            {sym}{p.toLocaleString()}
-          </button>
-        ))}
-        <button
-          className={customAmount ? "active" : ""}
-          onClick={() => { setCustomAmount(true); setAmount("") }}
-        >
-          Custom
-        </button>
-      </div>
-      {customAmount && (
-        <label className="custom-amount-label">
-          <span>{sym}</span>
-          <input
-            type="number"
-            placeholder="Enter amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            min="1"
-          />
-        </label>
-      )}
-      <button
-        className="button"
-        style={{ width: "100%", marginTop: "20px" }}
-        disabled={!amount}
-        onClick={() => amount && setStep("details")}
-      >
-        GIVE {amount ? `${sym}${Number(amount).toLocaleString()}` : "NOW"} <Icon name="arrow" size={17} />
-      </button>
-      <p className="donation-secure">
-        <Icon name="shield" size={13} />
-        Secure · Multi-currency · USD, NGN, GBP, EUR & GHS supported
-      </p>
+    <div className="donation-widget bank-transfer-callout">
+      <Eyebrow>Direct bank transfer</Eyebrow>
+      <h3>Give by UBA transfer</h3>
+      <p>Use the verified account details to make your transfer. Online card payments are not available yet.</p>
+      <div className="bank-transfer-summary"><span>Account name</span><b>Choice Souls Media</b><span>UBA account number</span><b>1006181050</b></div>
+      <Link className="button" href="/bank-transfer">TRANSFER DETAILS &amp; RECEIPT <Icon name="arrow" size={16} /></Link>
     </div>
+  )
+}
+
+function BankTransferPage() {
+  const [content, setContent] = useState<SiteContentOverrides>(() => readSiteContent())
+  const [copied, setCopied] = useState("")
+  useEffect(() => {
+    const update = () => setContent(readSiteContent())
+    window.addEventListener("csm-content-updated", update)
+    window.addEventListener("storage", update)
+    return () => {
+      window.removeEventListener("csm-content-updated", update)
+      window.removeEventListener("storage", update)
+    }
+  }, [])
+  const copy = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(`${label} copied`)
+    } catch {
+      setCopied(`Select and copy the ${label.toLowerCase()} manually.`)
+    }
+  }
+  return (
+    <main id="main">
+      <PageHero eyebrow="Bank transfer" title="Give directly to the mission." text="Use the verified account details below for a direct UBA transfer. Online card payments are not available yet." />
+      <section className="section page-shell transfer-layout">
+        <div className="transfer-details">
+          <Eyebrow>UBA · Nigeria</Eyebrow>
+          <h2>Transfer details</h2>
+          <div className="transfer-detail-row"><div><span>Account name</span><b>Choice Souls Media</b></div><button type="button" className="icon-command" aria-label="Copy account name" title="Copy account name" onClick={() => void copy("Choice Souls Media", "Account name")}><Icon name="copy" size={17} /></button></div>
+          <div className="transfer-detail-row"><div><span>Account number</span><b>1006181050</b></div><button type="button" className="icon-command" aria-label="Copy account number" title="Copy account number" onClick={() => void copy("1006181050", "Account number")}><Icon name="copy" size={17} /></button></div>
+          {copied && <p className="transfer-copy-status" role="status">{copied}</p>}
+          <p>After your transfer, email your payment reference and contact details so the team can confirm receipt.</p>
+          <a className="button" href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("UBA transfer proof")}`}>EMAIL TRANSFER PROOF <Icon name="arrow" size={16} /></a>
+          <p><Link href="/partner" className="text-link"><Icon name="chevronLeft" size={15} /> BACK TO PARTNERING</Link></p>
+        </div>
+        <img className="transfer-flyer" src={content.bankFlyer || ubaAccountImg} alt="UBA bank transfer details for Choice Souls Media" />
+      </section>
+    </main>
   )
 }
 
@@ -2379,7 +2391,7 @@ function Partner() {
             <p>
               Your donation directly funds gospel outreach, community programs,
               discipleship content, and the events that transform lives. Give
-              once or become a recurring partner.
+              through a direct bank transfer.
             </p>
             <div className="donation-impact">
               {[
@@ -2401,7 +2413,7 @@ function Partner() {
         </div>
       </section>
 
-      <section className="section page-shell bank-details">
+      <section className="section page-shell bank-details" id="bank-transfer">
         <div>
           <Eyebrow>Bank transfer</Eyebrow>
           <h2>Give directly to the mission.</h2>
@@ -3184,6 +3196,44 @@ function Footer() {
   )
 }
 
+type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> }
+
+function InstallAppPrompt() {
+  const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null)
+  const [installed, setInstalled] = useState(false)
+  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem("csm-install-dismissed") === "1")
+  useEffect(() => {
+    const onInstallAvailable = (event: Event) => {
+      event.preventDefault()
+      setInstallEvent(event as InstallPromptEvent)
+    }
+    const onInstalled = () => {
+      setInstalled(true)
+      setInstallEvent(null)
+    }
+    window.addEventListener("beforeinstallprompt", onInstallAvailable)
+    window.addEventListener("appinstalled", onInstalled)
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onInstallAvailable)
+      window.removeEventListener("appinstalled", onInstalled)
+    }
+  }, [])
+  if (!installEvent || installed || dismissed) return null
+  const install = async () => {
+    await installEvent.prompt()
+    const result = await installEvent.userChoice
+    if (result.outcome === "accepted") setInstallEvent(null)
+  }
+  return (
+    <aside className="install-app-prompt" aria-label="Install Choice Souls Media">
+      <img src="/icon-192.png" alt="" />
+      <div><b>Choice Souls Media</b><span>Add the app to your home screen for quick access.</span></div>
+      <button className="button" type="button" onClick={() => void install()}>INSTALL</button>
+      <button className="icon-command install-dismiss" type="button" aria-label="Dismiss install suggestion" onClick={() => { sessionStorage.setItem("csm-install-dismissed", "1"); setDismissed(true) }}><Icon name="close" size={16} /></button>
+    </aside>
+  )
+}
+
 // Bot chat widget
 function BotWidget() {
   const [open, setOpen] = useState(false)
@@ -3382,21 +3432,26 @@ export default function App() {
       "/faqs": "FAQs · Choice Souls Media",
       "/gallery": "Gallery · Choice Souls Media",
       "/partner": "Partner With Us · Choice Souls Media",
+      "/bank-transfer": "Bank Transfer · Choice Souls Media",
       "/contact": "Contact · Choice Souls Media",
     }
     document.title = names[path] || "Choice Souls Media"
   }, [path])
   if (path === adminPath) return <AdminShell />
+  const eventDetailMatch = path.match(/^\/events\/([^/]+)$/)
+  const eventDetail = eventDetailMatch ? decodeURIComponent(eventDetailMatch[1]) : null
   const pages: Record<string, React.ReactNode> = {
     "/": <Home openLightbox={setLightbox} />,
     "/about": <About />,
     "/services": <ServicesPage />,
     "/events": <Events openLightbox={setLightbox} />,
+    ...(eventDetail ? { [path]: <EventDetailPage eventId={eventDetail} openLightbox={setLightbox} /> } : {}),
     "/sermons": <SermonsPage />,
     "/testimonies": <TestimoniesPage />,
     "/faqs": <FAQsPage />,
     "/gallery": <Gallery openLightbox={setLightbox} />,
     "/partner": <Partner />,
+    "/bank-transfer": <BankTransferPage />,
     "/contact": <Contact />,
     "/privacy": <Policy type="privacy" />,
     "/terms": <Policy type="terms" />,
@@ -3411,6 +3466,7 @@ export default function App() {
       {pages[path] ?? <NotFound />}
       <Footer />
       <CookieNotice />
+      <InstallAppPrompt />
       <BotWidget />
       <Lightbox
         index={lightbox}
