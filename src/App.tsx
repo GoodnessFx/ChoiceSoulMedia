@@ -48,6 +48,14 @@ type BotMessage = {
   actions?: BotAction[]
 }
 
+type SiteContentOverrides = {
+  heroTitle?: string
+  heroDescription?: string
+  heroImages?: string[]
+  bankFlyer?: string
+  events?: Record<string, Partial<Pick<EventItem, "title" | "date" | "month" | "year" | "theme" | "place" | "type" | "time" | "summary" | "message" | "details" | "targetDate" | "registrationLink" | "locationLink" | "watchLink" | "audioLink" | "image" | "gallery">>>
+}
+
 const CONTACT_EMAIL = "choicesoulsm@gmail.com"
 const CONTACT_PHONE = "+234 817 201 3060"
 const YOUTUBE_CHANNEL = "https://www.youtube.com/@ChoiceSouls"
@@ -57,16 +65,52 @@ const WHATSAPP_LINK = "https://wa.me/2348172013060"
 const SENT_SUMMIT_REGISTRATION = "https://tinyurl.com/sentsummit"
 const SENT_SUMMIT_MAP = "https://www.google.com/maps/search/?api=1&query=Radisson+Blu+Anchorage+Hotel,+Ozumba+Mbadiwe,+Victoria+Island,+Lagos"
 const CAMP_MEETING_MAP = "https://www.google.com/maps/search/?api=1&query=25+McEwen+Street,+Alagomeji,+Lagos"
+const SITE_CONTENT_KEY = "csm-site-content-v1"
+
+function readSiteContent(): SiteContentOverrides {
+  try {
+    return JSON.parse(localStorage.getItem(SITE_CONTENT_KEY) || "{}") as SiteContentOverrides
+  } catch {
+    return {}
+  }
+}
+
+function saveSiteContent(content: SiteContentOverrides) {
+  try {
+    localStorage.setItem(SITE_CONTENT_KEY, JSON.stringify(content))
+    window.dispatchEvent(new Event("csm-content-updated"))
+    return true
+  } catch {
+    return false
+  }
+}
+
+function optimizeImageUpload(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(new Error("Could not read the selected image."))
+    reader.onload = () => {
+      const image = new Image()
+      image.onerror = () => reject(new Error("The selected file is not a supported image."))
+      image.onload = () => {
+        const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
+        const canvas = document.createElement("canvas")
+        canvas.width = Math.round(image.naturalWidth * scale)
+        canvas.height = Math.round(image.naturalHeight * scale)
+        const context = canvas.getContext("2d")
+        if (!context) return reject(new Error("Image processing is unavailable in this browser."))
+        context.drawImage(image, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL("image/jpeg", 0.78))
+      }
+      image.src = String(reader.result)
+    }
+    reader.readAsDataURL(file)
+  })
+}
 
 // Hero and event visuals
 const CSM_IMAGES = {
-  hero: [
-    "/sent-summit-poster.png",
-    aboutImg1,
-    aboutImg2,
-    "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
-    "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
-  ],
+  hero: [aboutImg1, aboutImg2],
   events: [
     "/sent-summit-poster.png",
     aboutImg1,
@@ -104,7 +148,7 @@ const galleryItems: GalleryItem[] = [
   },
   {
     id: "go-2026-thumb",
-    src: "https://img.youtube.com/vi/UWNyyteMj7g/maxresdefault.jpg",
+    src: "https://i.ytimg.com/vi/Dda8bQ_RD9g/hqdefault.jpg",
     category: "Camp Meeting",
     event: "GO",
     year: "2026",
@@ -112,7 +156,7 @@ const galleryItems: GalleryItem[] = [
   },
   {
     id: "apostolos-2025-thumb",
-    src: "https://img.youtube.com/vi/duNrqnjWZ6A/maxresdefault.jpg",
+    src: "https://i.ytimg.com/vi/0xT7JDP3_KA/hqdefault.jpg",
     category: "Camp Meeting",
     event: "Apostolos",
     year: "2025",
@@ -120,7 +164,7 @@ const galleryItems: GalleryItem[] = [
   },
   {
     id: "ekklesia-2024-thumb",
-    src: "https://img.youtube.com/vi/UWNyyteMj7g/hqdefault.jpg",
+    src: "https://i.ytimg.com/vi/Dda8bQ_RD9g/hqdefault.jpg",
     category: "Archive",
     event: "Ekklesia on the Move",
     year: "2024",
@@ -128,7 +172,7 @@ const galleryItems: GalleryItem[] = [
   },
   {
     id: "altars-thrones-2023-thumb",
-    src: "https://img.youtube.com/vi/duNrqnjWZ6A/hqdefault.jpg",
+    src: "https://i.ytimg.com/vi/0xT7JDP3_KA/hqdefault.jpg",
     category: "Archive",
     event: "Altars and Thrones",
     year: "2023",
@@ -559,6 +603,11 @@ const events: EventItem[] = [
     gallery: [aboutImg2, aboutImg1],
   },
 ]
+
+function getSiteEvents() {
+  const overrides = readSiteContent().events || {}
+  return events.map((event) => ({ ...event, ...overrides[event.id] }))
+}
 
 const lightboxPhotos = Array.from(new Set([
   ...photos,
@@ -1093,35 +1142,45 @@ function Home({ openLightbox }: { openLightbox: (n: number) => void }) {
 
 function HeroFull() {
   const [imgIndex, setImgIndex] = useState(0)
+  const [content, setContent] = useState<SiteContentOverrides>(() => readSiteContent())
+  const heroImages = content.heroImages?.length ? content.heroImages : CSM_IMAGES.hero
   useEffect(() => {
-    const id = setInterval(() => setImgIndex((i) => (i + 1) % CSM_IMAGES.hero.length), 6000)
-    return () => clearInterval(id)
+    const update = () => setContent(readSiteContent())
+    window.addEventListener("csm-content-updated", update)
+    window.addEventListener("storage", update)
+    return () => {
+      window.removeEventListener("csm-content-updated", update)
+      window.removeEventListener("storage", update)
+    }
   }, [])
+  useEffect(() => {
+    const id = setInterval(() => setImgIndex((i) => (i + 1) % heroImages.length), 6000)
+    return () => clearInterval(id)
+  }, [heroImages.length])
 
   return (
     <section className="hero-full">
-      {CSM_IMAGES.hero.map((p, i) => (
+      {heroImages.map((p, i) => (
         <div
           key={p}
           className={`hero-bg-slide ${i === imgIndex ? "active" : ""}`}
-          style={{ backgroundImage: `url(${p})` }}
+          style={{ backgroundImage: `url(${p})`, backgroundPosition: "center top" }}
         />
       ))}
       <div className="hero-full-overlay" />
       <div className="hero-full-content page-shell">
         <Eyebrow>A global community of believers</Eyebrow>
         <h1>
-          Raising souls for <em>God's Kingdom.</em>
+          {content.heroTitle || <>Raising souls for <em>God's Kingdom.</em></>}
         </h1>
         <p>
-          Choice Souls Media is a global interdenominational network of believers and ministries
-          committed to raising a generation that takes God's word to the nations.
+          {content.heroDescription || "Choice Souls Media is a global interdenominational network of believers and ministries committed to raising a generation that takes God's word to the nations."}
         </p>
       </div>
       {/* Dot indicators */}
       <div className="hero-counter">
         <div className="hero-counter-dots">
-          {CSM_IMAGES.hero.map((_, i) => (
+          {heroImages.map((_, i) => (
             <button
               key={i}
               className={`hero-dot ${i === imgIndex ? "active" : ""}`}
@@ -1203,6 +1262,16 @@ function FeaturedSermons() {
 }
 
 function EventsPreview() {
+  const [siteEvents, setSiteEvents] = useState(() => getSiteEvents())
+  useEffect(() => {
+    const update = () => setSiteEvents(getSiteEvents())
+    window.addEventListener("csm-content-updated", update)
+    window.addEventListener("storage", update)
+    return () => {
+      window.removeEventListener("csm-content-updated", update)
+      window.removeEventListener("storage", update)
+    }
+  }, [])
   return (
     <section className="section overflow">
       <div className="page-shell">
@@ -1216,7 +1285,7 @@ function EventsPreview() {
           </Link>
         </div>
         <Reveal stagger className="event-scroll">
-          {events.slice(0, 3).map((e) => (
+          {siteEvents.slice(0, 3).map((e) => (
             <article className="event-card" key={e.title}>
               <div className="event-photo">
                 <img src={e.image} alt="" loading="lazy" />
@@ -1529,8 +1598,18 @@ function ServicesPage() {
 function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
   const [filter, setFilter] = useState("All")
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const shown = events.filter((e) => filter === "All" || e.type === filter)
-  const featured = events.find((event) => event.id === "sent-summit-2026")!
+  const [siteEvents, setSiteEvents] = useState(() => getSiteEvents())
+  useEffect(() => {
+    const update = () => setSiteEvents(getSiteEvents())
+    window.addEventListener("csm-content-updated", update)
+    window.addEventListener("storage", update)
+    return () => {
+      window.removeEventListener("csm-content-updated", update)
+      window.removeEventListener("storage", update)
+    }
+  }, [])
+  const shown = siteEvents.filter((e) => filter === "All" || e.type === filter)
+  const featured = siteEvents.find((event) => event.id === "sent-summit-2026")!
   return (
     <main id="main">
       <PageHero
@@ -2273,6 +2352,16 @@ function DonationWidget() {
 }
 
 function Partner() {
+  const [content, setContent] = useState<SiteContentOverrides>(() => readSiteContent())
+  useEffect(() => {
+    const update = () => setContent(readSiteContent())
+    window.addEventListener("csm-content-updated", update)
+    window.addEventListener("storage", update)
+    return () => {
+      window.removeEventListener("csm-content-updated", update)
+      window.removeEventListener("storage", update)
+    }
+  }, [])
   return (
     <main id="main">
       <PageHero
@@ -2319,7 +2408,7 @@ function Partner() {
           <p>UBA · Choice Souls Media · Account number 1006181050</p>
           <a className="text-link" href={`mailto:${CONTACT_EMAIL}`}>Send proof of payment <Icon name="arrow" size={15} /></a>
         </div>
-        <img src={ubaAccountImg} alt="UBA account details for Choice Souls Media, account number 1006181050" loading="lazy" />
+        <img src={content.bankFlyer || ubaAccountImg} alt="UBA account details for Choice Souls Media, account number 1006181050" loading="lazy" />
       </section>
 
       <section className="section page-shell">
@@ -2578,8 +2667,145 @@ function Policy({ type }: { type: "privacy" | "terms" }) {
   )
 }
 
+function SiteContentEditor() {
+  const [content, setContent] = useState<SiteContentOverrides>(() => readSiteContent())
+  const [notice, setNotice] = useState("")
+  const importRef = useRef<HTMLInputElement>(null)
+  const update = (patch: Partial<SiteContentOverrides>) => {
+    const next = { ...content, ...patch }
+    if (saveSiteContent(next)) {
+      setContent(next)
+      setNotice("Saved in this browser. Export the content file to carry these changes into a deployment.")
+    } else {
+      setNotice("Could not save. Remove some large images or export your current content first.")
+    }
+  }
+  const updateEvent = (eventId: string, field: string, value: string) => {
+    const next = { ...content, events: { ...content.events, [eventId]: { ...content.events?.[eventId], [field]: value } } }
+    if (saveSiteContent(next)) {
+      setContent(next)
+      setNotice("Event changes saved in this browser.")
+    } else {
+      setNotice("Could not save this event. Remove large images or export your content first.")
+    }
+  }
+  const handleImage = async (file: File | undefined, onReady: (image: string) => void) => {
+    if (!file) return
+    try {
+      onReady(await optimizeImageUpload(file))
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Image upload failed.")
+    }
+  }
+  const downloadJson = () => {
+    const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "choicesouls-site-content.json"
+    link.click()
+    URL.revokeObjectURL(url)
+    setNotice("Content export downloaded.")
+  }
+  const importJson = async (file: File | undefined) => {
+    if (!file) return
+    try {
+      const parsed = JSON.parse(await file.text()) as SiteContentOverrides
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("The file must contain a site content object.")
+      if (saveSiteContent(parsed)) {
+        setContent(parsed)
+        setNotice("Content imported and saved in this browser.")
+      } else setNotice("Could not store this file. Remove some image data and try again.")
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Could not import this file.")
+    }
+  }
+  const reset = () => {
+    localStorage.removeItem(SITE_CONTENT_KEY)
+    setContent({})
+    window.dispatchEvent(new Event("csm-content-updated"))
+    setNotice("Browser-local content overrides cleared.")
+  }
+  const currentEvents = getSiteEvents()
+  const uploadField = (label: string, current: string, onReady: (image: string) => void) => (
+    <label className="admin-upload-field">
+      <span>{label}</span>
+      <input type="file" accept="image/*" onChange={(event) => { void handleImage(event.target.files?.[0], onReady); event.target.value = "" }} />
+      {current && <img src={current} alt={`${label} preview`} />}
+    </label>
+  )
+
+  return (
+    <div className="admin-content">
+      <section className="admin-section-card admin-content-notice">
+        <h3>Site content editor</h3>
+        <p>Changes save in this browser only. This static site has no secure admin account or shared publishing API; exporting JSON makes a backup, but publishing edits to all visitors requires a server-backed CMS or a code deployment.</p>
+        <div className="admin-content-actions">
+          <button className="button" type="button" onClick={downloadJson}>EXPORT CONTENT</button>
+          <button className="button button-outline" type="button" onClick={() => importRef.current?.click()}>IMPORT CONTENT</button>
+          <button className="admin-action-btn reject" type="button" onClick={reset}>RESET LOCAL EDITS</button>
+          <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={(event) => { void importJson(event.target.files?.[0]); event.target.value = "" }} />
+        </div>
+        {notice && <p className="admin-content-status" role="status">{notice}</p>}
+      </section>
+
+      <section className="admin-section-card admin-content-editor-card">
+        <h3>Homepage hero</h3>
+        <label className="admin-edit-field"><span>Headline</span><input value={content.heroTitle || "Raising souls for God's Kingdom."} onChange={(event) => update({ heroTitle: event.target.value })} /></label>
+        <label className="admin-edit-field"><span>Introduction</span><textarea rows={3} value={content.heroDescription || "Choice Souls Media is a global interdenominational network of believers and ministries committed to raising a generation that takes God's word to the nations."} onChange={(event) => update({ heroDescription: event.target.value })} /></label>
+        <div className="admin-hero-upload-grid">
+          {[0, 1].map((index) => {
+            const image = content.heroImages?.[index] || CSM_IMAGES.hero[index]
+            return <div key={index}>{uploadField(`Hero image ${index + 1}`, image, async (value) => {
+              const heroImages = [...(content.heroImages || CSM_IMAGES.hero)]
+              heroImages[index] = value
+              update({ heroImages })
+            })}<button type="button" className="admin-text-action" onClick={() => {
+              const heroImages = [...(content.heroImages || CSM_IMAGES.hero)]
+              heroImages[index] = CSM_IMAGES.hero[index]
+              update({ heroImages })
+            }}>Restore default portrait</button></div>
+          })}
+        </div>
+      </section>
+
+      <section className="admin-section-card admin-content-editor-card">
+        <h3>Partner page bank flyer</h3>
+        {uploadField("UBA account flyer", content.bankFlyer || ubaAccountImg, (image) => update({ bankFlyer: image }))}
+        <button className="admin-text-action" type="button" onClick={() => update({ bankFlyer: undefined })}>Restore supplied UBA flyer</button>
+      </section>
+
+      <section className="admin-section-card admin-content-editor-card">
+        <h3>Events</h3>
+        {currentEvents.map((event) => {
+          const values = content.events?.[event.id] || {}
+          return (
+            <article key={event.id} className="admin-event-editor">
+              <h4>{event.year} · {event.title}</h4>
+              <div className="admin-event-fields">
+                {([ ["title", "Title"], ["theme", "Theme"], ["date", "Date/day"], ["month", "Month"], ["year", "Year"], ["time", "Time"], ["place", "Venue"], ["registrationLink", "Registration URL"], ["locationLink", "Google Maps URL"] ] as const).map(([field, label]) => (
+                  <label className="admin-edit-field" key={field}><span>{label}</span><input value={String(values[field] ?? event[field] ?? "")} onChange={(e) => updateEvent(event.id, field, e.target.value)} /></label>
+                ))}
+              </div>
+              <label className="admin-edit-field"><span>Summary</span><textarea rows={2} value={String(values.summary ?? event.summary)} onChange={(e) => updateEvent(event.id, "summary", e.target.value)} /></label>
+              <label className="admin-edit-field"><span>Details</span><textarea rows={3} value={String(values.details ?? event.details)} onChange={(e) => updateEvent(event.id, "details", e.target.value)} /></label>
+              {uploadField(`${event.title} event image`, String(values.image ?? event.image), (image) => {
+                const next = { ...content, events: { ...content.events, [event.id]: { ...content.events?.[event.id], image, ...(event.id === "sent-summit-2026" ? { gallery: [image] } : {}) } } }
+                if (saveSiteContent(next)) {
+                  setContent(next)
+                  setNotice("Event artwork saved in this browser.")
+                } else setNotice("Could not save this image. Remove other large images or export your content first.")
+              })}
+            </article>
+          )
+        })}
+      </section>
+    </div>
+  )
+}
+
 function AdminShell() {
-  const [adminTab, setAdminTab] = useState<"dashboard"|"messages"|"sermons"|"events"|"partners"|"testimonies"|"settings">("dashboard")
+  const [adminTab, setAdminTab] = useState<"dashboard"|"messages"|"sermons"|"events"|"partners"|"testimonies"|"settings"|"site-content">("dashboard")
   const [reply, setReply] = useState<Record<number,string>>({})
   const [replySent, setReplySent] = useState<Record<number,boolean>>({})
 
@@ -2624,6 +2850,7 @@ function AdminShell() {
             ["events","Events","calendar"],
             ["partners","Partners","users"],
             ["testimonies","Testimonies","star"],
+            ["site-content","Site Content","image"],
             ["settings","Settings","shield"],
           ] as const).map(([key, label, icon]) => (
             <button key={key} className={adminTab === key ? "active" : ""} onClick={() => setAdminTab(key)}>
@@ -2863,6 +3090,8 @@ function AdminShell() {
             </div>
           </div>
         )}
+
+        {adminTab === "site-content" && <SiteContentEditor />}
       </main>
     </div>
   )

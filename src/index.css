@@ -14,9 +14,9 @@
 .mobile-backdrop.closing{animation:fadeOut .3s both}
 @keyframes fadeIn{from{opacity:0}}
 @keyframes fadeOut{to{opacity:0}}
-.mobile-menu{display:none;position:fixed;top:0;right:0;bottom:0;width:min(300px,85vw);background:#fff;z-index:300;flex-direction:column;transform:translateX(105%);opacity:0;transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .32s;box-shadow:-8px 0 40px rgba(21,32,74,.15)}
-.mobile-menu.open{transform:none;opacity:1}
-.mobile-menu.closing{transform:translateX(105%);opacity:0}
+.mobile-menu{display:none;position:fixed;top:0;right:calc(-1 * min(300px,85vw));bottom:0;width:min(300px,85vw);background:#fff;z-index:300;flex-direction:column;transform:none;opacity:0;transition:right .32s cubic-bezier(.4,0,.2,1),opacity .32s;box-shadow:-8px 0 40px rgba(21,32,74,.15)}
+.mobile-menu.open{right:0;opacity:1}
+.mobile-menu.closing{right:calc(-1 * min(300px,85vw));opacity:0}
 .mobile-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
 .mobile-brand{display:flex;align-items:center;gap:10px}
 .mobile-brand img{width:42px;height:42px;object-fit:contain;border-radius:50%;border:none;background:transparent;flex-shrink:0}
@@ -239,6 +239,24 @@ footer{background:var(--navy-dark);color:#fff;padding-top:70px}.footer-grid{disp
 .founder-img-main img{width:100%;height:100%;object-fit:contain;object-position:center top}
 .founder-img-secondary{height:300px;border-radius:20px;overflow:hidden;position:relative;background:var(--soft)}
 .founder-img-secondary img{width:100%;height:100%;object-fit:contain;object-position:center top}
+.team-grid img{object-fit:contain;object-position:center top;background:var(--soft)}
+.admin-content-notice{margin-bottom:18px}.admin-content-notice>p{max-width:900px;font-size:.82rem}
+.admin-content-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.admin-content-actions .button{min-height:40px;padding:0 16px;font-size:.64rem}
+.admin-content-status{margin:12px 0 0!important;font-size:.72rem;color:var(--navy-dark)!important}
+.admin-content-editor-card{margin:0 0 18px}
+.admin-edit-field{display:flex;flex-direction:column;gap:6px;margin:12px 0;min-width:0}
+.admin-edit-field>span,.admin-upload-field>span{font-size:.68rem;font-weight:700;color:var(--navy-dark)}
+.admin-edit-field input,.admin-edit-field textarea,.admin-upload-field input[type=file]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:400 .78rem var(--body)}
+.admin-edit-field textarea{resize:vertical}
+.admin-hero-upload-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.admin-upload-field{display:flex;flex-direction:column;gap:8px;margin:14px 0;min-width:0}
+.admin-upload-field img{width:min(100%,360px);height:180px;object-fit:contain;object-position:left center;background:var(--soft);border-radius:8px}
+.admin-text-action{padding:0;border:0;background:none;color:var(--navy);font-size:.7rem;font-weight:700;text-decoration:underline;cursor:pointer}
+.admin-event-editor{padding:18px 0;border-top:1px solid var(--line)}
+.admin-event-editor h4{margin:0 0 8px;color:var(--navy-dark);font:700 .9rem var(--display)}
+.admin-event-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
+@media(max-width:760px){.admin-hero-upload-grid,.admin-event-fields{grid-template-columns:1fr}.admin-content-actions{align-items:stretch}.admin-content-actions>*{width:100%}}
 @media(max-width:980px){.founder-images{width:100%;flex-direction:row}.founder-img-main{flex:1;height:360px}.founder-img-secondary{width:180px;height:360px}}
 @media(max-width:640px){.founder-images{flex-direction:column}.founder-img-main{height:420px}.founder-img-secondary{width:100%;height:360px}}
 
@@ -323,3 +341,6 @@ footer{background:var(--navy-dark);color:#fff;padding-top:70px}.footer-grid{disp
 
 /* ——— BOT on small screens — move above cookie bar ——— */
 @media(max-width:480px){.bot-launcher{bottom:88px}.bot-panel{bottom:154px}}
+
+.process article{min-width:0}
+@media(max-width:640px){.process{grid-template-columns:1fr;gap:22px}.process article{padding-right:0}.process h3{max-width:none}}
