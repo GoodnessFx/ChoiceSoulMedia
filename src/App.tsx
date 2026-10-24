@@ -2732,7 +2732,7 @@ function AdminLoginModal({ close, onSuccess }: { close?: () => void; onSuccess: 
       setError("")
       onSuccess()
     } else {
-      setError("Incorrect password. Use default 'csm#Admin2026' or your configured admin password.")
+      setError("Incorrect email or password.")
     }
   }
 
@@ -2775,9 +2775,7 @@ function AdminLoginModal({ close, onSuccess }: { close?: () => void; onSuccess: 
           <button className="button" type="submit" style={{ width: "100%", justifyContent: "center", marginTop: 6, minHeight: 44 }}>
             SIGN IN TO PORTAL <Icon name="arrow" size={16} />
           </button>
-          <p style={{ fontSize: ".74rem", color: "rgba(255,255,255,.6)", textAlign: "center", margin: "8px 0 0" }}>
-            <!-- Default credentials hidden for security -->
-          </p>
+          
         </form>
       </div>
     </div>
