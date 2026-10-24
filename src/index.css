@@ -460,10 +460,7 @@ footer{background:var(--navy-dark);color:#fff;padding-top:70px}.footer-grid{disp
 }
 
 .save-date-dropdown {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  z-index: 999;
+  /* position/top/left are set via inline style from JS using getBoundingClientRect */
   background: #1a1f3a;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 12px;
