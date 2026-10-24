@@ -752,9 +752,35 @@ const events: EventItem[] = [
   },
 ]
 
-function getSiteEvents() {
+function getSiteEvents(): EventItem[] {
   const overrides = readSiteContent().events || {}
-  return events.map((event) => ({ ...event, ...overrides[event.id] }))
+  const baseMapped = events.map((event) => ({ ...event, ...overrides[event.id] }))
+  const extraEventIds = Object.keys(overrides).filter((id) => !events.some((e) => e.id === id))
+  const extraEvents: EventItem[] = extraEventIds.map((id) => {
+    const o = overrides[id] || {}
+    return {
+      id,
+      date: o.date || "TBA",
+      month: o.month || "TBA",
+      year: o.year || "2027",
+      title: o.title || "Upcoming Event",
+      theme: o.theme || "Kingdom Agenda",
+      place: o.place || "Lagos, Nigeria",
+      type: (o.type as EventItem["type"]) || "Upcoming",
+      image: o.image || aboutImg1,
+      time: o.time || "6:00 PM",
+      summary: o.summary || "Event details coming soon.",
+      message: o.message || "Join us for this special gathering.",
+      details: o.details || "More information will be provided soon.",
+      targetDate: o.targetDate,
+      registrationLink: o.registrationLink,
+      locationLink: o.locationLink,
+      watchLink: o.watchLink,
+      audioLink: o.audioLink,
+      gallery: o.gallery || [aboutImg1],
+    }
+  })
+  return [...baseMapped, ...extraEvents]
 }
 
 const lightboxPhotos = Array.from(new Set([
@@ -1187,26 +1213,43 @@ function Countdown({ targetDate = "2027-08-24T18:00:00" }: { targetDate?: string
 // Programs and Announcements carousel
 function ProgramsCarousel() {
   const [current, setCurrent] = useState(0)
-  const upcomingEvents = getSiteEvents().filter((event) => event.type === "Upcoming" && event.id === "camp-meeting-2027")
+  const [siteEvents, setSiteEvents] = useState<EventItem[]>(() => getSiteEvents())
+
+  useEffect(() => {
+    const handleUpdate = () => setSiteEvents(getSiteEvents())
+    window.addEventListener("csm-content-updated", handleUpdate)
+    window.addEventListener("storage", handleUpdate)
+    return () => {
+      window.removeEventListener("csm-content-updated", handleUpdate)
+      window.removeEventListener("storage", handleUpdate)
+    }
+  }, [])
+
+  const campMeeting =
+    siteEvents.find((e) => e.id === "camp-meeting-2027") ||
+    siteEvents.find((e) => Boolean(e.targetDate)) ||
+    events.find((e) => e.id === "camp-meeting-2027")!
+
+  const upcomingSlides = [campMeeting].filter(Boolean)
   const pastSlides = programSlides.filter((slide) => slide.label.startsWith("PAST EVENT"))
-  const total = upcomingEvents.length + pastSlides.length
+  const total = upcomingSlides.length + pastSlides.length
 
   useEffect(() => {
     const id = setInterval(() => setCurrent((c) => (c + 1) % total), 5000)
     return () => clearInterval(id)
   }, [total])
 
-  const slide = current < upcomingEvents.length
+  const slide = current < upcomingSlides.length
     ? {
       id: current + 100,
-      label: `UPCOMING — ${upcomingEvents[current].title.toUpperCase()}`,
-      title: upcomingEvents[current].theme,
-      subtitle: upcomingEvents[current].message,
-      dates: `${upcomingEvents[current].date} ${upcomingEvents[current].month} ${upcomingEvents[current].year} · ${upcomingEvents[current].time}`,
-      location: upcomingEvents[current].place,
-      image: upcomingEvents[current].image,
+      label: `UPCOMING — ${upcomingSlides[current].title.toUpperCase()}`,
+      title: upcomingSlides[current].theme,
+      subtitle: upcomingSlides[current].message,
+      dates: `${upcomingSlides[current].date} ${upcomingSlides[current].month} ${upcomingSlides[current].year} · ${upcomingSlides[current].time}`,
+      location: upcomingSlides[current].place,
+      image: upcomingSlides[current].image,
     }
-    : pastSlides[current - upcomingEvents.length]
+    : pastSlides[current - upcomingSlides.length]
 
   return (
     <section className="programs-section section">
@@ -1269,18 +1312,18 @@ function ProgramsCarousel() {
           </div>
         </div>
         <div className="upcoming-program-grid">
-          {upcomingEvents.filter((event) => event.id === "camp-meeting-2027").map((event) => (
-            <article className="upcoming-program-box" key={event.id}>
+          {campMeeting && (
+            <article className="upcoming-program-box" key={campMeeting.id}>
               <Eyebrow>UPCOMING GATHERING</Eyebrow>
-              <h3>{event.title}: {event.theme}</h3>
-              <p className="upcoming-sub">{event.date} {event.month} {event.year} · {event.time} · {event.place}</p>
-              {event.targetDate && <Countdown targetDate={event.targetDate} />}
+              <h3>{campMeeting.title}: {campMeeting.theme}</h3>
+              <p className="upcoming-sub">{campMeeting.date} {campMeeting.month} {campMeeting.year} · {campMeeting.time} · {campMeeting.place}</p>
+              {campMeeting.targetDate && <Countdown targetDate={campMeeting.targetDate} />}
               <div className="upcoming-program-actions">
-                <Link className="text-link" href={`/events/${event.id}`}>EVENT DETAILS <Icon name="arrow" size={14} /></Link>
-                {event.targetDate && <SaveDateMenu event={event} />}
+                <Link className="text-link" href={`/events/${campMeeting.id}`}>EVENT DETAILS <Icon name="arrow" size={14} /></Link>
+                {campMeeting.targetDate && <SaveDateMenu event={campMeeting} />}
               </div>
             </article>
-          ))}
+          )}
         </div>
       </div>
     </section>
@@ -2438,15 +2481,53 @@ function PublicForm({ kind }: { kind: "partner" | "contact" }) {
   )
 }
 
-// Multi-currency donation widget
+// Dynamic direct bank transfer donation widget
 function DonationWidget() {
+  const [content, setContent] = useState<SiteContentOverrides>(() => readSiteContent())
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    const update = () => setContent(readSiteContent())
+    window.addEventListener("csm-content-updated", update)
+    window.addEventListener("storage", update)
+    return () => {
+      window.removeEventListener("csm-content-updated", update)
+      window.removeEventListener("storage", update)
+    }
+  }, [])
+
+  const bankName = content.bankName || "United Bank for Africa (UBA)"
+  const accName = content.bankAccountName || "Choice Souls Media"
+  const accNum = content.bankAccountNumber || "1006181050"
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(accNum)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch {}
+  }
+
   return (
     <div className="donation-widget bank-transfer-callout">
       <Eyebrow>Direct bank transfer</Eyebrow>
-      <h3>Give by UBA transfer</h3>
-      <p>Use the verified account details to make your transfer. Online card payments are not available yet.</p>
-      <div className="bank-transfer-summary"><span>Account name</span><b>Choice Souls Media</b><span>UBA account number</span><b>1006181050</b></div>
-      <Link className="button" href="/bank-transfer">TRANSFER DETAILS &amp; RECEIPT <Icon name="arrow" size={16} /></Link>
+      <h3>Give via {bankName}</h3>
+      <p>Use the verified account details below to make your direct transfer.</p>
+      <div className="bank-transfer-summary">
+        <span>Bank name</span><b>{bankName}</b>
+        <span>Account name</span><b>{accName}</b>
+        <span>Account number</span><b>{accNum}</b>
+      </div>
+      <button className="button" type="button" onClick={copy} style={{ width: "100%", justifyContent: "center" }}>
+        {copied ? "COPIED TO CLIPBOARD ✓" : <>COPY ACCOUNT NUMBER <Icon name="copy" size={16} /></>}
+      </button>
+      <div style={{ marginTop: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+        <Link className="text-link" href="/bank-transfer" style={{ fontSize: ".76rem" }}>
+          MORE DETAILS <Icon name="arrow" size={13} />
+        </Link>
+        <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Donation / Partnership Proof")}`} className="text-link" style={{ fontSize: ".76rem" }}>
+          EMAIL PROOF <Icon name="arrow" size={13} />
+        </a>
+      </div>
     </div>
   )
 }
@@ -2463,29 +2544,37 @@ function BankTransferPage() {
       window.removeEventListener("storage", update)
     }
   }, [])
+
+  const bankName = content.bankName || "United Bank for Africa (UBA)"
+  const accName = content.bankAccountName || "Choice Souls Media"
+  const accNum = content.bankAccountNumber || "1006181050"
+
   const copy = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value)
-      setCopied(`${label} copied`)
+      setCopied(`${label} copied!`)
+      setTimeout(() => setCopied(""), 2500)
     } catch {
       setCopied(`Select and copy the ${label.toLowerCase()} manually.`)
     }
   }
+
   return (
     <main id="main">
-      <PageHero eyebrow="Bank transfer" title="Give directly to the mission." text="Use the verified account details below for a direct UBA transfer. Online card payments are not available yet." />
+      <PageHero eyebrow="Bank transfer" title="Give directly to the mission." text="Use the verified account details below for direct transfer. All gifts support community outreach, teaching, and gospel expansion." />
       <section className="section page-shell transfer-layout">
         <div className="transfer-details">
-          <Eyebrow>UBA · Nigeria</Eyebrow>
+          <Eyebrow>{bankName}</Eyebrow>
           <h2>Transfer details</h2>
-          <div className="transfer-detail-row"><div><span>Account name</span><b>Choice Souls Media</b></div><button type="button" className="icon-command" aria-label="Copy account name" title="Copy account name" onClick={() => void copy("Choice Souls Media", "Account name")}><Icon name="copy" size={17} /></button></div>
-          <div className="transfer-detail-row"><div><span>Account number</span><b>1006181050</b></div><button type="button" className="icon-command" aria-label="Copy account number" title="Copy account number" onClick={() => void copy("1006181050", "Account number")}><Icon name="copy" size={17} /></button></div>
+          <div className="transfer-detail-row"><div><span>Bank name</span><b>{bankName}</b></div></div>
+          <div className="transfer-detail-row"><div><span>Account name</span><b>{accName}</b></div><button type="button" className="icon-command" aria-label="Copy account name" title="Copy account name" onClick={() => void copy(accName, "Account name")}><Icon name="copy" size={17} /></button></div>
+          <div className="transfer-detail-row"><div><span>Account number</span><b>{accNum}</b></div><button type="button" className="icon-command" aria-label="Copy account number" title="Copy account number" onClick={() => void copy(accNum, "Account number")}><Icon name="copy" size={17} /></button></div>
           {copied && <p className="transfer-copy-status" role="status">{copied}</p>}
           <p>After your transfer, email your payment reference and contact details so the team can confirm receipt.</p>
-          <a className="button" href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("UBA transfer proof")}`}>EMAIL TRANSFER PROOF <Icon name="arrow" size={16} /></a>
+          <a className="button" href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Transfer proof")}`}>EMAIL TRANSFER PROOF <Icon name="arrow" size={16} /></a>
           <p><Link href="/partner" className="text-link"><Icon name="chevronLeft" size={15} /> BACK TO PARTNERING</Link></p>
         </div>
-        <img className="transfer-flyer" src={content.bankFlyer || ubaAccountImg} alt="UBA bank transfer details for Choice Souls Media" />
+        <img className="transfer-flyer" src={content.bankFlyer || ubaAccountImg} alt={`${bankName} bank transfer details for ${accName}`} />
       </section>
     </main>
   )
@@ -2545,10 +2634,10 @@ function Partner() {
         <div>
           <Eyebrow>Bank transfer</Eyebrow>
           <h2>Give directly to the mission.</h2>
-          <p>UBA · Choice Souls Media · Account number 1006181050</p>
+          <p>{content.bankName || "UBA"} · {content.bankAccountName || "Choice Souls Media"} · Account number {content.bankAccountNumber || "1006181050"}{content.bankSortCode ? ` · Sort code ${content.bankSortCode}` : ""}</p>
           <a className="text-link" href={`mailto:${CONTACT_EMAIL}`}>Send proof of payment <Icon name="arrow" size={15} /></a>
         </div>
-        <img src={content.bankFlyer || ubaAccountImg} alt="UBA account details for Choice Souls Media, account number 1006181050" loading="lazy" />
+        <img src={content.bankFlyer || ubaAccountImg} alt={`${content.bankName || "UBA"} account details for ${content.bankAccountName || "Choice Souls Media"}, account number ${content.bankAccountNumber || "1006181050"}`} loading="lazy" />
       </section>
 
       <section className="section page-shell">
@@ -3064,12 +3153,67 @@ function SiteContentEditor() {
       </section>
 
       <section className="admin-section-card admin-content-editor-card">
-        <h3>Events</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+          <h3 style={{ margin: 0 }}>Events</h3>
+          <button
+            className="button"
+            type="button"
+            style={{ fontSize: ".72rem", padding: "7px 16px", minHeight: "36px" }}
+            onClick={() => {
+              const newId = `event-${Date.now()}`
+              const next = {
+                ...content,
+                events: {
+                  ...content.events,
+                  [newId]: {
+                    title: "New Gathering",
+                    theme: "Theme / Topic",
+                    date: "01",
+                    month: "OCT",
+                    year: "2027",
+                    time: "6:00 PM",
+                    place: "Lagos, Nigeria",
+                    summary: "Short summary of the gathering",
+                    details: "Detailed event information...",
+                    type: "Upcoming" as const,
+                  },
+                },
+              }
+              if (saveSiteContent(next)) {
+                setContent(next)
+                setNotice("New event created below. Update the text, upload artwork, and click Publish Changes!")
+              }
+            }}
+          >
+            + ADD NEW EVENT
+          </button>
+        </div>
         {currentEvents.map((event) => {
           const values = content.events?.[event.id] || {}
+          const isCustom = !events.some((e) => e.id === event.id)
           return (
             <article key={event.id} className="admin-event-editor">
-              <h4>{event.year} · {event.title}</h4>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h4>{event.year} · {event.title}</h4>
+                {isCustom && (
+                  <button
+                    type="button"
+                    className="admin-text-action"
+                    style={{ color: "#f87171" }}
+                    onClick={() => {
+                      const nextEvents = { ...content.events }
+                      delete nextEvents[event.id]
+                      const next = { ...content, events: nextEvents }
+                      if (saveSiteContent(next)) {
+                        setContent(next)
+                        setNotice(`Removed event ${event.title}.`)
+                      }
+                    }}
+                  >
+                    Delete Event
+                  </button>
+                )}
+              </div>
               <div className="admin-event-fields">
                 {([ ["title", "Title"], ["theme", "Theme"], ["date", "Date/day"], ["month", "Month"], ["year", "Year"], ["time", "Time"], ["place", "Venue"], ["registrationLink", "Registration URL"], ["locationLink", "Google Maps URL"] ] as const).map(([field, label]) => (
                   <label className="admin-edit-field" key={field}><span>{label}</span><input value={String(values[field] ?? event[field] ?? "")} onChange={(e) => updateEvent(event.id, field, e.target.value)} /></label>
@@ -3077,11 +3221,11 @@ function SiteContentEditor() {
               </div>
               <label className="admin-edit-field"><span>Summary</span><textarea rows={2} value={String(values.summary ?? event.summary)} onChange={(e) => updateEvent(event.id, "summary", e.target.value)} /></label>
               <label className="admin-edit-field"><span>Details</span><textarea rows={3} value={String(values.details ?? event.details)} onChange={(e) => updateEvent(event.id, "details", e.target.value)} /></label>
-              {uploadField(`${event.title} event image`, String(values.image ?? event.image), (image) => {
+              {uploadField(`${event.title} artwork/image`, String(values.image ?? event.image), (image) => {
                 const next = { ...content, events: { ...content.events, [event.id]: { ...content.events?.[event.id], image, ...(event.id === "sent-summit-2026" ? { gallery: [image] } : {}) } } }
                 if (saveSiteContent(next)) {
                   setContent(next)
-                  setNotice("Event artwork saved in this browser.")
+                  setNotice("Event artwork saved in this browser. Click Publish Changes to push live!")
                 } else setNotice("Could not save this image. Remove other large images or export your content first.")
               })}
             </article>

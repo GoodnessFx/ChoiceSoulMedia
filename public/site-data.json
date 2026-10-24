@@ -3,6 +3,10 @@
   "heroTitle": "Raising souls for God's Kingdom.",
   "heroDescription": "Choice Souls Media is a global interdenominational network of believers and ministries committed to raising a generation that takes God's word to the nations.",
   "heroImages": [],
+  "bankName": "United Bank for Africa (UBA)",
+  "bankAccountName": "Choice Souls Media",
+  "bankAccountNumber": "1006181050",
+  "bankSortCode": "",
   "events": {
     "sent-summit-2026": {
       "title": "Sent Summit",
@@ -27,8 +31,7 @@
       "summary": "The next camp meeting gathering, built for deep consecration, teaching, prayer, and kingdom alignment.",
       "message": "The next camp meeting countdown now points to 24 August 2027 at 6 PM.",
       "details": "This is the larger annual gathering on the site, separate from Sent Summit. It is positioned as the broader camp meeting experience for the Choice Souls Media community.",
-      "type": "Annual",
-      "secret": true
+      "type": "Upcoming"
     },
     "campus-invasion-2027": {
       "title": "Annual Campus Invasion",
