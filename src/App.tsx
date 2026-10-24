@@ -492,7 +492,7 @@ const events: EventItem[] = [
     date: "24",
     month: "AUG",
     year: "2027",
-    title: "Kingdomcentric Camp Meeting",
+    title: "Annual Camp Meeting",
     theme: "Kingdomcentric",
     place: "Capstone Resource Centre, Lagos",
     type: "Upcoming",
@@ -2712,7 +2712,7 @@ function Policy({ type }: { type: "privacy" | "terms" }) {
 }
 
 function AdminLoginModal({ close, onSuccess }: { close?: () => void; onSuccess: () => void }) {
-  const [email, setEmail] = useState("admin@choicesoulsmedia.org")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
@@ -2756,7 +2756,7 @@ function AdminLoginModal({ close, onSuccess }: { close?: () => void; onSuccess: 
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@choicesoulsmedia.org"
+              placeholder="Your admin email"
               required
             />
           </label>
@@ -2776,7 +2776,7 @@ function AdminLoginModal({ close, onSuccess }: { close?: () => void; onSuccess: 
             SIGN IN TO PORTAL <Icon name="arrow" size={16} />
           </button>
           <p style={{ fontSize: ".74rem", color: "rgba(255,255,255,.6)", textAlign: "center", margin: "8px 0 0" }}>
-            Default credentials: <b style={{ color: "var(--yellow)" }}>admin@choicesoulsmedia.org</b> / <b style={{ color: "var(--yellow)" }}>csm#Admin2026</b>
+            <!-- Default credentials hidden for security -->
           </p>
         </form>
       </div>
@@ -2829,7 +2829,7 @@ function SiteContentEditor() {
         body: JSON.stringify({
           message: `Update site content via Admin Portal [${new Date().toISOString()}]`,
           content: base64Content,
-          branch: "master",
+          branch: "main",
           ...(sha ? { sha } : {}),
         }),
       })
@@ -3543,7 +3543,7 @@ function BotWidget() {
       return { from: "bot", text: "Sent Summit: Sunday, 15 November 2026 at 3 PM, Radisson Blu, Ozumba Mbadiwe, Victoria Island, Lagos. Register or open the venue in Google Maps.", actions: [{ label: "Register", href: SENT_SUMMIT_REGISTRATION }, { label: "Google Maps", href: SENT_SUMMIT_MAP }, { label: "Events page", href: "/events" }] }
     }
     if (lower.includes("camp meeting") || lower.includes("kingdomcentric")) {
-      return { from: "bot", text: "Kingdomcentric Camp Meeting is listed for 24 August 2027 at 6 PM at Capstone Resource Centre, Lagos. Check the Events page for details and the countdown.", actions: [{ label: "Events page", href: "/events" }, { label: "Google Maps", href: CAMP_MEETING_MAP }] }
+      return { from: "bot", text: "Annual Camp Meeting is listed for 24 August 2027 at 6 PM at Capstone Resource Centre, Lagos. Check the Events page for details and the countdown.", actions: [{ label: "Events page", href: "/events" }, { label: "Google Maps", href: CAMP_MEETING_MAP }] }
     }
     if (lower.includes("event") || lower.includes("campus invasion") || lower.includes("somebody pray")) {
       return { from: "bot", text: "The next event is Sent Summit on 15 November 2026 at 3 PM in Lagos. The calendar also lists Camp Meeting, Somebody Pray, Campus Invasion, and past event archives.", actions: [{ label: "Browse events", href: "/events" }, { label: "Sent Summit registration", href: SENT_SUMMIT_REGISTRATION }] }

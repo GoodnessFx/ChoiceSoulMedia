@@ -17,7 +17,7 @@
       "details": "Sent Summit is the next major public gathering on the site right now. It is positioned as a sharp, practical room for kingdom-minded professionals, founders, creatives, and believers who want their work to reflect the agenda of God."
     },
     "camp-meeting-2027": {
-      "title": "Kingdomcentric Camp Meeting",
+      "title": "Annual Camp Meeting",
       "theme": "Kingdomcentric",
       "date": "24",
       "month": "AUG",
@@ -26,7 +26,9 @@
       "place": "Capstone Resource Centre, Lagos",
       "summary": "The next camp meeting gathering, built for deep consecration, teaching, prayer, and kingdom alignment.",
       "message": "The next camp meeting countdown now points to 24 August 2027 at 6 PM.",
-      "details": "This is the larger annual gathering on the site, separate from Sent Summit. It is positioned as the broader camp meeting experience for the Choice Souls Media community."
+      "details": "This is the larger annual gathering on the site, separate from Sent Summit. It is positioned as the broader camp meeting experience for the Choice Souls Media community.",
+      "type": "Annual",
+      "secret": true
     },
     "campus-invasion-2027": {
       "title": "Annual Campus Invasion",
