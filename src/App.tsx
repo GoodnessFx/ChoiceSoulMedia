@@ -90,6 +90,89 @@ function downloadCalendarEvent(event: EventItem) {
   anchor.click()
   URL.revokeObjectURL(url)
 }
+
+function SaveDateMenu({ event }: { event: EventItem }) {
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [open])
+
+  if (!event.targetDate) return null
+
+  const gLink = calendarLink(event)
+  const eventUrl = `${window.location.origin}/events/${event.id}`
+  const shareText = `Join us for ${event.title}: ${event.theme} — ${event.date} ${event.month} ${event.year} at ${event.time}, ${event.place}. Details: ${eventUrl}`
+
+  const socials = [
+    {
+      label: "WhatsApp",
+      icon: "📲",
+      href: `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+    },
+    {
+      label: "X / Twitter",
+      icon: "🐦",
+      href: `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+    },
+    {
+      label: "Facebook",
+      icon: "📘",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}&quote=${encodeURIComponent(shareText)}`,
+    },
+    {
+      label: "Telegram",
+      icon: "✈️",
+      href: `https://t.me/share/url?url=${encodeURIComponent(eventUrl)}&text=${encodeURIComponent(shareText)}`,
+    },
+  ]
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(eventUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {}
+  }
+
+  return (
+    <div className="save-date-menu-wrap" ref={menuRef}>
+      <button className="text-link" type="button" onClick={() => setOpen((v) => !v)}>
+        <Icon name="calendar" size={14} /> SAVE DATE ▾
+      </button>
+      {open && (
+        <div className="save-date-dropdown">
+          <div className="save-date-section-label">Add to calendar</div>
+          {gLink && (
+            <a className="save-date-option" href={gLink} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+              <span>📅</span> Google Calendar
+            </a>
+          )}
+          <button className="save-date-option" type="button" onClick={() => { downloadCalendarEvent(event); setOpen(false) }}>
+            <span>📁</span> Download .ics (Apple / Outlook)
+          </button>
+          <div className="save-date-divider" />
+          <div className="save-date-section-label">Share event</div>
+          {socials.map((s) => (
+            <a key={s.label} className="save-date-option" href={s.href} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+              <span>{s.icon}</span> {s.label}
+            </a>
+          ))}
+          <button className="save-date-option" type="button" onClick={copyLink}>
+            <span>{copied ? "✅" : "🔗"}</span> {copied ? "Link copied!" : "Copy event link"}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 const SITE_CONTENT_KEY = "csm-site-content-v1"
 let cachedRemoteSiteData: SiteContentOverrides = {}
 
@@ -1178,7 +1261,7 @@ function ProgramsCarousel() {
               {event.targetDate && <Countdown targetDate={event.targetDate} />}
               <div className="upcoming-program-actions">
                 <Link className="text-link" href={`/events/${event.id}`}>EVENT DETAILS <Icon name="arrow" size={14} /></Link>
-                {event.targetDate && <button className="text-link" type="button" onClick={() => downloadCalendarEvent(event)}><Icon name="calendar" size={14} /> SAVE DATE</button>}
+                {event.targetDate && <SaveDateMenu event={event} />}
               </div>
             </article>
           ))}
@@ -1714,8 +1797,7 @@ function Events({ openLightbox }: { openLightbox: (n: number) => void }) {
             <a href={featured.locationLink} className="text-link" target="_blank" rel="noreferrer">
               <Icon name="pin" size={15} /> DIRECTIONS
             </a>
-            <button type="button" className="text-link" onClick={() => downloadCalendarEvent(featured)}><Icon name="calendar" size={15} /> ADD TO CALENDAR</button>
-            {calendarLink(featured) && <a href={calendarLink(featured)!} className="text-link" target="_blank" rel="noreferrer"><Icon name="calendar" size={15} /> GOOGLE CALENDAR</a>}
+            <SaveDateMenu event={featured} />
             <Link href={`/events/${featured.id}`} className="text-link">EVENT DETAILS <Icon name="arrow" size={15} /></Link>
           </div>
         </div>
@@ -1810,8 +1892,7 @@ function EventDetailPage({ eventId, openLightbox }: { eventId: string; openLight
         <div className="event-actions event-detail-actions">
           {event.registrationLink && <a className="button" href={event.registrationLink} target="_blank" rel="noreferrer">REGISTER <Icon name="arrow" size={16} /></a>}
           {event.locationLink && <a className="text-link" href={event.locationLink} target="_blank" rel="noreferrer"><Icon name="pin" size={16} /> GET DIRECTIONS</a>}
-          {event.type === "Upcoming" && event.targetDate && <button className="text-link" type="button" onClick={() => downloadCalendarEvent(event)}><Icon name="calendar" size={16} /> ADD TO CALENDAR (.ICS)</button>}
-          {event.type === "Upcoming" && calendarLink(event) && <a className="text-link" href={calendarLink(event)!} target="_blank" rel="noreferrer"><Icon name="calendar" size={16} /> GOOGLE CALENDAR</a>}
+          {event.type === "Upcoming" && event.targetDate && <SaveDateMenu event={event} />}
           <Link className="text-link" href="/contact"><Icon name="mail" size={16} /> CONTACT THE TEAM</Link>
         </div>
       </section>
