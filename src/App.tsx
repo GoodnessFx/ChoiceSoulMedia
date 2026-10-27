@@ -3628,9 +3628,11 @@ type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Pro
 function InstallAppPrompt() {
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
-  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem("csm-install-dismissed") === "1")
+  const [dismissed, setDismissed] = useState(() => { try { return localStorage.getItem("csm-install-dismissed") === "1" } catch { return false } })
   const [showIosSteps, setShowIosSteps] = useState(false)
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone)
+  // Dismiss permanently so the prompt never nags again after the user interacts or reopens.
+  const dismissPrompt = () => { try { localStorage.setItem("csm-install-dismissed", "1") } catch {}; setDismissed(true) }
   useEffect(() => {
     const onInstallAvailable = (event: Event) => {
       event.preventDefault()
@@ -3653,23 +3655,25 @@ function InstallAppPrompt() {
       <aside className="install-app-prompt" aria-label="Add Choice Souls Media to Home Screen">
         <img src="/icon-192.png" alt="" />
         <div><b>Choice Souls Media</b><span>Add to your Home Screen from the Safari Share menu.</span></div>
-        <button className="button" type="button" onClick={() => setShowIosSteps((show) => !show)}>{showIosSteps ? "GOT IT" : "HOW TO ADD"}</button>
-        <button className="icon-command install-dismiss" type="button" aria-label="Dismiss install suggestion" onClick={() => { sessionStorage.setItem("csm-install-dismissed", "1"); setDismissed(true) }}><Icon name="close" size={16} /></button>
+        <button className="button" type="button" onClick={() => { if (showIosSteps) dismissPrompt(); else setShowIosSteps(true) }}>{showIosSteps ? "GOT IT" : "HOW TO ADD"}</button>
+        <button className="icon-command install-dismiss" type="button" aria-label="Dismiss install suggestion" onClick={dismissPrompt}><Icon name="close" size={16} /></button>
         {showIosSteps && <p className="install-ios-steps">In Safari, tap Share, then choose “Add to Home Screen.”</p>}
       </aside>
     )
   }
   const install = async () => {
-    await installEvent.prompt()
-    const result = await installEvent.userChoice
-    if (result.outcome === "accepted") setInstallEvent(null)
+    const evt = installEvent
+    if (!evt) return
+    try { await evt.prompt() } catch {}
+    try { await evt.userChoice } catch {}
+    dismissPrompt()
   }
   return (
     <aside className="install-app-prompt" aria-label="Install Choice Souls Media">
       <img src="/icon-192.png" alt="" />
       <div><b>Choice Souls Media</b><span>Add the app to your home screen for quick access.</span></div>
       <button className="button" type="button" onClick={() => void install()}>INSTALL</button>
-      <button className="icon-command install-dismiss" type="button" aria-label="Dismiss install suggestion" onClick={() => { sessionStorage.setItem("csm-install-dismissed", "1"); setDismissed(true) }}><Icon name="close" size={16} /></button>
+      <button className="icon-command install-dismiss" type="button" aria-label="Dismiss install suggestion" onClick={dismissPrompt}><Icon name="close" size={16} /></button>
     </aside>
   )
 }
