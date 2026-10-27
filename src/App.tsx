@@ -2969,17 +2969,39 @@ function AdminLoginModal({ close, onSuccess }: { close?: () => void; onSuccess: 
 
 // Embedded deploy token (base64-encoded to keep it out of plain sight)
 const _GH_ENCODED = "Z2hwX0VHYUh0cUdIUWVXNm5wOHVTYW5SdVhRckNocFdYMzBPb2tZTQ=="
-function _ghToken() { try { return atob(_GH_ENCODED) } catch { return "" } }
+const _GH_TOKEN_LS_KEY = "csm-gh-deploy-token"
+// Prefer a token saved at runtime (the admin can replace the built-in one if
+// GitHub revokes or expires it) and fall back to the embedded token.
+function _ghToken() {
+  try {
+    const override = (localStorage.getItem(_GH_TOKEN_LS_KEY) || "").trim()
+    if (override) return override
+  } catch {}
+  try { return atob(_GH_ENCODED) } catch { return "" }
+}
 
 function SiteContentEditor() {
   const [content, setContent] = useState<SiteContentOverrides>(() => readSiteContent())
   const [notice, setNotice] = useState("")
   const [pushingGithub, setPushingGithub] = useState(false)
   const [githubStatus, setGithubStatus] = useState("")
+  const [tokenDraft, setTokenDraft] = useState(() => { try { return localStorage.getItem(_GH_TOKEN_LS_KEY) || "" } catch { return "" } })
   const importRef = useRef<HTMLInputElement>(null)
+  const saveDeployToken = () => {
+    const value = tokenDraft.trim()
+    try {
+      if (value) localStorage.setItem(_GH_TOKEN_LS_KEY, value)
+      else localStorage.removeItem(_GH_TOKEN_LS_KEY)
+    } catch {}
+    setGithubStatus(value ? "✅ Deploy token saved. Click Publish Changes to try again." : "Removed the custom token. The built-in token will be used.")
+  }
 
   const pushToGithub = async () => {
     const token = _ghToken()
+    if (!token) {
+      setGithubStatus("❌ No GitHub deploy token is available. Paste a valid token below, save it, then retry.")
+      return
+    }
     setPushingGithub(true)
     setGithubStatus("Publishing your changes…")
     try {
@@ -2999,7 +3021,12 @@ function SiteContentEditor() {
       const pd = await putRes.json()
       setGithubStatus(`✅ Published! (commit ${pd.commit?.sha?.slice(0, 7) || "done"}) — all visitors worldwide now see your updates.`)
     } catch (err: any) {
-      setGithubStatus(`❌ Publish failed: ${err.message || err}. Please contact the developer.`)
+      const msg = err?.message || String(err || "")
+      setGithubStatus(
+        /401|bad credential/i.test(msg)
+          ? "❌ GitHub rejected the deploy token (it is expired or revoked). Add a fresh token below, click SAVE TOKEN, then retry."
+          : `❌ Publish failed: ${msg}.`
+      )
     } finally {
       setPushingGithub(false)
     }
@@ -3100,6 +3127,14 @@ function SiteContentEditor() {
           </button>
         </div>
         {githubStatus && <p style={{ marginTop: "12px", fontSize: ".82rem", color: githubStatus.startsWith("✅") ? "#34d399" : "#fca5a5" }}>{githubStatus}</p>}
+      <div className="admin-token-row">
+          <label className="admin-edit-field" style={{ margin: 0 }}>
+            <span>GitHub deploy token (replace if rejected)</span>
+            <input type="password" value={tokenDraft} onChange={(event) => setTokenDraft(event.target.value)} placeholder="Paste a valid token, e.g. ghp_… or github_pat_…" autoComplete="off" />
+          </label>
+          <button className="admin-action-btn reject" type="button" onClick={saveDeployToken}>SAVE TOKEN</button>
+          <p className="admin-content-status">The built-in token was revoked by GitHub. Paste a fresh personal access token above, click <b>SAVE TOKEN</b>, then <b>Publish Changes</b>.</p>
+        </div>
       </section>
 
       <section className="admin-section-card admin-content-notice">
